@@ -52,9 +52,38 @@ class Indiv:
 		return self.bestx
 
 	def Mutate(self,strength):
-		for i in xrange(dnalen):
-			if random.random() < strength:
-				self.dna[i] = random.sample(basepairs,1)[0]
+		avg_point_mutations = 1
+		avg_swaps = 10
+		avg_deletions = 3
+
+		# perform point mutations
+		npoint = int(random.random()*strength*avg_point_mutations)
+		for n in xrange(npoint):
+			i = random.randint(0,dnalen-1)
+			self.dna[i] = random.sample(basepairs,1)[0]
+
+		# perform swap mutations
+		nswap = int(random.random()*strength*avg_swaps)
+		for n in xrange(nswap):
+			i = random.randint(0,dnalen-2)
+			j = i+1 # for now we just swap with next base
+			tmp = self.dna[i]
+			self.dna[i] = self.dna[j]
+			self.dna[j] = tmp
+
+		# perform "deletions" (actually MOVEs to end)
+		ndeletions = int(random.random()*strength*avg_deletions)
+		for n in xrange(ndeletions):
+			i = random.randint(0,dnalen-2)
+			j = dnalen-1
+
+			# delete ith base, shifting left
+			for k in xrange(i,j):
+				self.dna[i]=self.dna[i+1]
+		
+			# add a random base at the end to maintain length
+			self.dna[j] = random.sample(basepairs,1)[0]
+
 
 class Population:
 	def __init__(self,size,maze):
@@ -88,5 +117,5 @@ class Population:
 			self.pop[j] = copy.deepcopy(self.pop[i])
 
 		for i in self.pop:
-			i.Mutate(.01)
+			i.Mutate(1)
 
