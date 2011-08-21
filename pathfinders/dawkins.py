@@ -7,6 +7,9 @@ Chris Merck
 Object: To reach the right-hand side of the screen.
 """
 
+# supported games for this solver, just 'maze' for now
+supported_games = [ 'maze' ]
+
 import random
 import copy
 
@@ -23,6 +26,21 @@ G = left
 C = right
 basepairs = [A, T, G, C]
 dnalen = 200
+
+class Brain:
+	name = 'dawkins'
+
+	def __init__(self, game, popsize = 30):
+		if game.name not in supported_games:
+			raise Exception('solver "%s" does not play game "%s"' % (name, game.name))
+
+		self.game = game
+		self.pop = Population(popsize, game)
+
+	def Step(self):
+		# we deviate a bit from the biblical record here
+		self.pop.Evolve()
+
 
 class Indiv:
 	def __init__(self,maze):
@@ -118,4 +136,5 @@ class Population:
 
 		for i in self.pop:
 			i.Mutate(1)
+
 

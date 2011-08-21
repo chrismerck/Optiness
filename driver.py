@@ -3,7 +3,6 @@
 """
 Rudimentary driver program to run an Optiness pathfinder on a gamecore
 Darren Alton
-
 """
 
 # this level was removed from Donkey Kong for its NES release
@@ -12,25 +11,30 @@ import pygame
 # a nyckname that refers to a female sybling
 import sys
 
-# Optiness engine modules
+# Optiness engine and solver modules
 sys.path.append('./gamecores')
-import maze
-
-# Optiness solver modules
 sys.path.append('./pathfinders')
-import dawkins
 
-# the hell did you just call me, PUNK?
-if __name__ == "__main__":
-	# we want to make the output of Maze bigger
+
+def main():
+	engine_name, solver_name = ('maze', 'dawkins')
+
+	if len(sys.argv) == 3:
+		engine_name = sys.argv[1]
+		solver_name = sys.argv[2]
+
+	engine = __import__(engine_name)
+	solver = __import__(solver_name)
+
+	# we want to make the display output bigger
 	scale = 4
-	pxmax = maze.xmax*scale
-	pymax = maze.ymax*scale
+	pxmax = engine.xmax*scale
+	pymax = engine.ymax*scale
 
 	screen = pygame.display.set_mode((pxmax,pymax))
 
-	testmaze = maze.Maze(1)
-	pop = dawkins.Population(30, testmaze)
+	game = engine.Game()
+	brain = solver.Brain(game)
 
 	running = True
 	while running:
@@ -39,12 +43,13 @@ if __name__ == "__main__":
 			if event.type == pygame.QUIT:
 				running = False
 
-		# we deviate a bit from the biblical record here
-		pop.Evolve()
+		brain.Step() # open question: should this return the surface instead?
 
 		# get the screen from the game engine, scale it, and show it
-		surf = testmaze.Draw()
+		surf = game.Draw()
 		scaled = pygame.transform.scale(surf, (pxmax,pymax))
 		screen.blit(scaled, scaled.get_rect())
 		pygame.display.flip()
 
+
+if __name__ == "__main__":  main()

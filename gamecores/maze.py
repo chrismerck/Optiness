@@ -22,8 +22,11 @@ floor = 0
 wall = 1
 
 
-class Maze:
-	def __init__(self,seed):
+# Maze game
+class Game:
+	name = 'maze'
+
+	def __init__(self, seed = 1):
 		# God does not play dice
 		random.seed(seed)
 
