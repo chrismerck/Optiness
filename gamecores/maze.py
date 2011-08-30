@@ -25,6 +25,7 @@ wall = 1
 # Maze game
 class Game:
 	name = 'maze'
+	valid_inputs = xrange(4)
 
 	def __init__(self, seed = 1):
 		# God does not play dice
@@ -79,18 +80,29 @@ class Game:
 		self.player.Draw(ret)
 		return ret
 
+	def Fitness(self):
+		return self.player.bestx
 
+	def Reset(self):
+		self.player.Reset()
+
+	def Input(self, n):
+		# directions
+		up, down, left, right = ( (0,-1), (0,1), (-1,0), (1,0) )
+		directions = [up, down, left, right]
+		self.player.Move(*directions[n])
+
+
+# helper
 class Player:
 	def __init__(self,maze,xpos,ypos):
 		self.maze = maze
 		self.xstart = xpos
 		self.ystart = ypos
-		self.ResetHistory()
+		self.Reset()
 
 	def Draw(self,surf):
-		for pos in self.hist:
-			surf.set_at(pos, player_color)
-		surf.set_at((self.xpos, self.ypos), (255,255,255))
+		surf.set_at((self.xpos, self.ypos), player_color)
 
 	def Move(self,xvel,yvel):
 		nx = self.xpos + xvel
@@ -101,11 +113,15 @@ class Player:
 		# if we didn't run into a wall, that's our new position
 		self.xpos = nx
 		self.ypos = ny
-		self.hist.append((self.xpos,self.ypos))
+
+		# update bestx
+		if self.xpos > self.bestx:
+			self.bestx = self.xpos
+
 		return True
 
-	def ResetHistory(self):
+	def Reset(self):
 		self.xpos = self.xstart
 		self.ypos = self.ystart
-		self.hist = []
+		self.bestx = self.xstart
 

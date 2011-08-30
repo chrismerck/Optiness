@@ -42,11 +42,11 @@ def main():
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				running = False
+			else:
+				brain.Event(event)
 
-		brain.Step() # open question: should this return the surface instead?
-
-		# get the screen from the game engine, scale it, and show it
-		surf = game.Draw()
+		# let the pathfinder take a step, get the screen from the game, scale it, and show it
+		surf = brain.Step()
 		scaled = pygame.transform.scale(surf, (pxmax,pymax))
 		screen.blit(scaled, scaled.get_rect())
 		pygame.display.flip()

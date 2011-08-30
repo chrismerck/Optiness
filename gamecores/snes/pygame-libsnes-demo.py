@@ -26,9 +26,9 @@ def input_state(port, device, index, id):
 	elif id == 6: return joypad.get_hat(0)[0] == -1
 	elif id == 7: return joypad.get_hat(0)[0] == 1
 
-	# button mappings here are for my saitek p2500 gamepad.
+	# button mappings here are for x360-compatible button layouts
 	#            B Y e t  (skip dpad)  A X L R
-	p2500_lut = [2,0,5,4, -1,-1,-1,-1, 3,1,6,7]
+	p2500_lut = [0,2,6,7, -1,-1,-1,-1, 1,3,4,5]
 	return joypad.get_button(p2500_lut[id])
 
 

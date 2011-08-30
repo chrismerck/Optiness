@@ -13,19 +13,9 @@ supported_games = [ 'maze' ]
 import random
 import copy
 
-# directions
-up = (0,-1)
-down = (0,1)
-left = (-1,0)
-right = (1,0)
 
-# base-pairs 
-A = up
-T = down
-G = left
-C = right
-basepairs = [A, T, G, C]
-dnalen = 200
+dnalen = 300
+
 
 class Brain:
 	name = 'dawkins'
@@ -40,34 +30,24 @@ class Brain:
 	def Step(self):
 		# we deviate a bit from the biblical record here
 		self.pop.Evolve()
+		return self.game.Draw()
+
+	def Event(self, evt):
+		pass
 
 
 class Indiv:
-	def __init__(self,maze):
-		self.dna = [random.sample(basepairs,1)[0] for i in xrange(dnalen)]
-		self.maze = maze
-		self.bestx = 0
+	def __init__(self, game):
+		self.game = game
+		self.dna = [random.choice(self.game.valid_inputs) for i in xrange(dnalen)]
 		self.hist = []
 		self.lastx = 0
 		self.lasty = 0
 
 	def Run(self):
-		p1 = self.maze.player
-
-		p1.ResetHistory()
-		self.bestx = 0
+		self.game.Reset()
 		for bp in self.dna:
-			p1.Move(*bp)
-			if p1.xpos > self.bestx:
-				self.bestx = p1.xpos
-
-		self.hist = p1.hist
-		self.lastx = p1.xpos
-		self.lasty = p1.ypos
-
-	def Fitness(self):
-		# first run in a maze!
-		return self.bestx
+			self.game.Input(bp)
 
 	def Mutate(self,strength):
 		avg_point_mutations = 1
@@ -78,7 +58,7 @@ class Indiv:
 		npoint = int(random.random()*strength*avg_point_mutations)
 		for n in xrange(npoint):
 			i = random.randint(0,dnalen-1)
-			self.dna[i] = random.sample(basepairs,1)[0]
+			self.dna[i] = random.choice(self.game.valid_inputs)
 
 		# perform swap mutations
 		nswap = int(random.random()*strength*avg_swaps)
@@ -98,36 +78,28 @@ class Indiv:
 			# delete ith base, shifting left
 			for k in xrange(i,j):
 				self.dna[i]=self.dna[i+1]
-		
+
 			# add a random base at the end to maintain length
-			self.dna[j] = random.sample(basepairs,1)[0]
+			self.dna[j] = random.choice(self.game.valid_inputs)
 
-
+# TODO: continue working on making "game" a unit rather than having hooks into "player"
 class Population:
-	def __init__(self,size,maze):
+	def __init__(self, size, game):
 		self.pop = []
-		self.maze = maze
+		self.game = game
 		for i in xrange(size):
-			self.pop.append(Indiv(maze))
+			self.pop.append(Indiv(game))
 
 	def Evolve(self):
 		# evaluate fitnesses
 		print "(",
 		for i in self.pop:
 			i.Run()
-			print i.Fitness(),
+			print i.game.Fitness(),
 		print ")"
 
 		# sort by fitness
-		self.pop.sort(key=lambda i: -i.Fitness())
-
-		# FIXME HACK: for visualization, we cram the 9th-best run's history
-		#   back into Maze's "Player" before the screen is drawn
-		p1 = self.maze.player
-		superman = self.pop[9]
-		p1.hist = superman.hist
-		p1.xpos = superman.lastx
-		p1.ypos = superman.lasty
+		self.pop.sort(key=lambda i: -i.game.Fitness())
 
 		# survival of the fittest and reproduction
 		for i in xrange(len(self.pop)/2):
