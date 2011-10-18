@@ -33,8 +33,8 @@ def main():
 
 	screen = pygame.display.set_mode((pxmax,pymax))
 
-	game = engine.Game()
-	brain = solver.Brain(game)
+	game = engine.LoadedGame()
+	brain = solver.LoadedBrain(game)
 
 	running = True
 	while running:

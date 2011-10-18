@@ -1,14 +1,24 @@
 #!/usr/bin/env python2
 import sys, pygame
 
+
 from snes import core as snes_core
 from snes.util import snes_framebuffer_to_RGB888
 
-if len(sys.argv) < 2: raise Exception('need argument: ./pygame-demo [rom]')
+#mingw_setup_args={'options': {'build_ext': {'compiler': 'mingw32'}}}
+#import pyximport; pyximport.install(setup_args=mingw_setup_args)
+#from xutil import snes_framebuffer_to_RGB888
+
+if len(sys.argv) < 2: raise Exception('need argument: ./pygame-libsnes-demo [rom]')
 
 rom = open(sys.argv[1], 'rb').read()
 
-emu = snes_core.EmulatedSNES('/usr/lib/libsnes-performance.so')
+libsnes_path = '/usr/lib/libsnes-compatibility.so'
+if sys.platform == 'win32':
+	libsnes_path = '.\\libsnes-win64\\'
+	libsnes_path += 'libsnes-082-fix-compat-x86_64.dll'
+
+emu = snes_core.EmulatedSNES(libsnes_path)
 emu.load_cartridge_normal(rom)
 
 screen = pygame.display.set_mode((256, 224))

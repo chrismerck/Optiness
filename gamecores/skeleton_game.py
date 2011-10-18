@@ -6,6 +6,7 @@ Darren Alton
 """
 
 import pygame
+from cPickle import dumps, loads
 
 xmax = 100 # width of the screen
 ymax = 80  # height of the screen
@@ -13,14 +14,21 @@ ymax = 80  # height of the screen
 class Game:
 	name = 'skeleton game'
 
-	def __init__(self, foo = 1): # must have defaults for any arguments here
+	def __init__(self):
 		pass
 
 	def Draw(self): # return a copy of the "screen" for visualization
 		ret = pygame.surface.Surface((xmax, ymax))
-		ret.fill((0,123,246))
+		ret.fill((0,123,45))
 		return ret
 
-# TODO: get, restore state.  to be used by the solver.
+	def Freeze(self): # return some copy of the game's state
+		return dumps(self.__dict__)
 
+	def Thaw(self, state): # restore a saved state returned by Freeze
+		self.__dict__ = loads(state)
 
+	def Input(self, data): # set the state of the "control pad"
+		pass
+
+LoadedGame = Game

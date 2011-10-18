@@ -7,24 +7,23 @@ Chris Merck
 Object: To reach the right-hand side of the screen.
 """
 
-# supported games for this solver, just 'maze' for now
-supported_games = [ 'maze' ]
 
 import random
 import copy
 
+from skeleton_solver import Brain
+
 
 dnalen = 300
 
-
-class Brain:
+class Dawkins(Brain):
 	name = 'dawkins'
 
 	def __init__(self, game, popsize = 30):
-		if game.name not in supported_games:
-			raise Exception('solver "%s" does not play game "%s"' % (name, game.name))
+		# supported games for this solver, just 'maze' for now
+		self.supported_games = [ 'maze' ]
 
-		self.game = game
+		Brain.__init__(self, game)
 		self.pop = Population(popsize, game)
 
 	def Step(self):
@@ -82,6 +81,7 @@ class Indiv:
 			# add a random base at the end to maintain length
 			self.dna[j] = random.choice(self.game.valid_inputs)
 
+
 # TODO: continue working on making "game" a unit rather than having hooks into "player"
 class Population:
 	def __init__(self, size, game):
@@ -110,3 +110,4 @@ class Population:
 			i.Mutate(1)
 
 
+LoadedBrain = Dawkins

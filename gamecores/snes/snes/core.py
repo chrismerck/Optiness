@@ -828,6 +828,14 @@ class EmulatedSNES(W.LowLevelWrapper):
 		if dmg_rtc is not None:
 			self._string_to_memory(dmg_rtc, MEMORY_GAME_BOY_RTC)
 
+	def get_library_info(self):
+		"""
+		Return the name and version numbers (major, minor) of the library.
+		"""
+		return [ self._lib.snes_library_id(),
+		         ( self._lib.snes_library_revision_major(),
+				   self._lib.snes_library_revision_minor() ) ]
+
 	def close(self):
 		"""
 		Release all resources associated with this library instance.

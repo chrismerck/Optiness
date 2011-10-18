@@ -7,17 +7,14 @@ Darren Alton
 
 import pygame
 
-supported_games = [ 'maze', 'snes' ]
+from skeleton_solver import Brain
 
-class Brain:
+class Sapiens(Brain):
 	name = 'sapiens'
 
-	def __init__(self, game): # any arguments besides "game" must have defaults
-		gname = game.__class__.name
-		if gname not in supported_games:
-			raise Exception('solver "%s" does not play game "%s"' % (name, gname))
-
-		self.game = game
+	def __init__(self, game):
+		self.supported_games = [ 'maze', 'snes' ]
+		Brain.__init__(self, game)
 
 		pygame.joystick.init()
 		self.joy = pygame.joystick.Joystick(0)
@@ -37,3 +34,4 @@ class Brain:
 			elif hat[0] == 1: inp = 3
 			if inp >= 0: self.game.Input(inp)
 
+LoadedBrain = Sapiens

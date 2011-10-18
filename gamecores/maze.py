@@ -10,6 +10,8 @@ Object: To reach the right-hand side of the screen.
 import pygame
 import random
 
+from skeleton_game import Game
+
 xmax = 100
 ymax = 80
 
@@ -23,7 +25,7 @@ wall = 1
 
 
 # Maze game
-class Game:
+class Maze(Game):
 	name = 'maze'
 	valid_inputs = xrange(4)
 
@@ -125,3 +127,5 @@ class Player:
 		self.ypos = self.ystart
 		self.bestx = self.xstart
 
+
+LoadedGame = Maze
