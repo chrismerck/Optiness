@@ -6,8 +6,9 @@ from struct import unpack, Struct
 class BSVFile:
 	def __init__(self, path):
 		buf = open(path, 'rb').read()
-		magic = buf[0:4]
-		if magic != 'BSV1': raise Exception('invalid BSV magic number')
+
+		magic = buf[3::-1]  # curse you endianness!
+		if magic != 'BSV1': raise Exception('invalid BSV magic number: ' + magic)
 
 		(serializerVersion, cartCRC, stateSize) = unpack('<III', buf[4:16])
 
@@ -32,7 +33,7 @@ class BSVFile:
 
 	def next_input(self):
 		ret = [0] * self.players
-		if self.ctrlindex <= self.frames:
+		if self.ctrlindex < self.frames:
 			s = self.ctrlstruct
 			ret = s.unpack_from(self.ctrlbuf, self.ctrlindex * s.size)
 			self.ctrlindex += 1
