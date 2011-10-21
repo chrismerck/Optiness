@@ -10,8 +10,8 @@ import cPickle
 
 from skeleton_solver import Brain
 
-class Playback(Brain):
-	name = 'playback'
+class Rerun(Brain):
+	name = 'rerun'
 
 	def __init__(self, game):
 		self.supported_games = [ 'maze', 'snes' ]
@@ -31,4 +31,4 @@ class Playback(Brain):
 	def Path(self):
 		return self.outputstring
 
-LoadedBrain = Playback
+LoadedBrain = Rerun
