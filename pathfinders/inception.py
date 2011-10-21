@@ -29,11 +29,11 @@ class Inception(Brain):
 
 	def _DFS(self, node, depth = 0):
 		for i in self.game.ValidInputs():
-			game.Thaw(node)
-			game.Input(i)
+			self.game.Thaw(node)
+			self.game.Input(i)
 			if self.game.Victory(): return [i]
 			if depth < self.maxdepth:
-				ret = self._DFS(game.Freeze(), depth+1)
+				ret = self._DFS(self.game.Freeze(), depth+1)
 				if ret is not None:
 					ret.insert(0, i)
 					return ret
