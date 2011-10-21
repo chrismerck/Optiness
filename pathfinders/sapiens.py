@@ -21,8 +21,10 @@ class Sapiens(Brain):
 		self.joy.init()
 		print self.joy.get_name()
 
-	def Step(self): # any arguments must have defaults
-		return self.game.Draw()
+		self.input_log = []
+
+	def Step(self):
+		pass  # derp
 
 	def Event(self, evt):
 		if evt.type == pygame.JOYHATMOTION:
@@ -32,6 +34,11 @@ class Sapiens(Brain):
 			elif hat[1] == -1: inp = 1
 			elif hat[0] == -1: inp = 2
 			elif hat[0] == 1: inp = 3
-			if inp >= 0: self.game.Input(inp)
+			if inp >= 0:
+				self.input_log.append(inp)
+				self.game.Input(inp)
+
+	def Path(self):
+		return self.input_log
 
 LoadedBrain = Sapiens

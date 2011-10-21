@@ -22,6 +22,9 @@ class Game:
 		ret.fill((0,123,45))
 		return ret
 
+	def Victory(self):
+		return True
+
 	def Freeze(self): # return some copy of the game's state
 		return dumps(self.__dict__)
 

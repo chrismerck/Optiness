@@ -49,7 +49,7 @@ class SMVFile:
 
 	def next_input(self):
 		ret = [0] * self.players
-		if self.ctrlindex <= self.frames:
+		if self.ctrlindex < self.frames:
 			s = self.ctrlstruct
 			ret = s.unpack_from(self.ctrlbuf, self.ctrlindex * s.size)
 			self.ctrlindex += 1

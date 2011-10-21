@@ -94,6 +94,8 @@ class Maze(Game):
 		directions = [up, down, left, right]
 		self.player.Move(*directions[n])
 
+	def Victory(self):
+		return self.player.xpos >= xmax - 1
 
 # helper
 class Player:
@@ -110,7 +112,7 @@ class Player:
 		nx = self.xpos + xvel
 		ny = self.ypos + yvel
 
-		if self.maze.world[nx][ny] == wall: return False
+		if nx >= xmax or self.maze.world[nx][ny] == wall: return False
 
 		# if we didn't run into a wall, that's our new position
 		self.xpos = nx

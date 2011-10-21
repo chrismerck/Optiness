@@ -15,6 +15,15 @@ class Brain:
 		self.game = game
 
 	def Step(self): # any arguments must have defaults
+		self.game.Input(0)
+
+	def Draw(self):
+		return self.game.Draw()
+
+	def Path(self):
+		return []
+
+	def Event(self, evt):
 		pass
 
 LoadedBrain = Brain
