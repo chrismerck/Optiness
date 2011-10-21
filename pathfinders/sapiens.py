@@ -24,7 +24,7 @@ class Sapiens(Brain):
 		self.input_log = []
 
 	def Step(self):
-		pass  # derp
+		return (self.game.Draw(),)  # derp
 
 	def Event(self, evt):
 		if evt.type == pygame.JOYHATMOTION:

@@ -15,6 +15,8 @@ class StateWrapper:
 	def __init__(self, state, fscores):
 		self.state = state
 		self.f = fscores
+	def __eq__(self, other):
+		return self.state == other.state
 	def __le__(self, other):
 		return self.f[self.state] <= other.f[self.state]
 
@@ -26,7 +28,6 @@ class Sagan(Brain):
 		Brain.__init__(self, game)
 		self.input_log = None
 
-
 	def _ReconstructPath(self, came_from, state):
 		if state not in came_from:
 			return []
@@ -37,50 +38,54 @@ class Sagan(Brain):
 		return p
 
 	def Step(self):
+		start = self.game.Freeze()
 		f_score = {}
-		start = StateWrapper(self.game.Freeze(), f_score)
 
-		openset = [ start ] # singleton-set containing the initial state
+		# singleton-set containing the initial state.  must use StateWrappers.
+		openset = [ StateWrapper(self.game.Freeze(), f_score) ]
 
 		# we should index these with states rather than wrappers
 		# ... and even that isn't sustainable, so we'll have to
 		#     come up with something better later
 		closedset = set()
 		came_from = {}
-		g_score = { start.state: 0 }
-		h_score = { start.state: self.game.Heuristic() }
+		g_score = { start: 0 }
+		h_score = { start: self.game.Heuristic() }
 
-		f_score[start.state] = g_score[start.state] + h_score[start.state]
+		f_score[start] = g_score[start] + h_score[start]
 
 		while len(openset) > 0: # while not empty
-			x = heappop(openset) # get the lowest f=g+h of the openset
-			self.game.Thaw(x.state)
+			x = heappop(openset).state # get the lowest f=g+h of the openset
+			self.game.Thaw(x)
 			if self.game.Victory():
-				self.input_log = self._ReconstructPath(came_from, x.state) # TODO
+				self.input_log = self._ReconstructPath(came_from, x)
 				return
 
-			closedset.add(x.state)
+			closedset.add(x)
 			for inp in self.game.ValidInputs():
-				self.game.Thaw(x.state)
+				self.game.Thaw(x)
 				self.game.Input(inp)
-				y = StateWrapper(self.game.Freeze(), f_score)
+				y = self.game.Freeze()
 
-				if y.state in closedset: continue
+				if y in closedset: continue
 				yield self.game.Draw() # only show if we've not seen this state yet
 
-				tentative_g = g_score[x.state] + 1
-				tentative_better = True
-				if y not in openset:
-					heappush(openset, y)
-				elif tentative_g >= g_score[y.state]:
+				tentative_g = g_score[x] + 1
+				yw = StateWrapper(y, f_score)
+				if yw not in openset:
+					heappush(openset, yw)
+					tentative_better = True
+				elif tentative_g < g_score[y]:
+					tentative_better = True
+				else:
 					tentative_better = False
 
 				if tentative_better:
-					came_from[y.state] = (x.state, inp)
-					g_score[y.state] = tentative_g
-					h_score[y.state] = self.game.Heuristic()
-					f_score[y.state] = g_score[y.state] + h_score[y.state]
-					print f_score[y.state], g_score[y.state], h_score[y.state]
+					came_from[y] = (x, inp)
+					g_score[y] = tentative_g
+					h_score[y] = self.game.Heuristic()
+					f_score[y] = g_score[y] + h_score[y]
+					print f_score[y], '=', g_score[y], '+', h_score[y]
 
 
 	def Path(self):

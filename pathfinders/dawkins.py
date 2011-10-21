@@ -29,9 +29,7 @@ class Dawkins(Brain):
 	def Step(self):
 		# we deviate a bit from the biblical record here
 		self.pop.Evolve()
-
-	def Draw(self):
-		return self.game.Draw()
+		return (self.game.Draw(),)
 
 
 class Indiv:
