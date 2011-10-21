@@ -27,6 +27,7 @@ class Rerun(Brain):
 		if len(self.inputstring): frameinput = self.inputstring.pop(0)
 		self.game.Input(frameinput)
 		self.outputstring.append(frameinput)
+		return (self.game.Draw(),)
 
 	def Path(self):
 		return self.outputstring

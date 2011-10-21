@@ -94,11 +94,11 @@ class Population:
 		print "(",
 		for i in self.pop:
 			i.Run()
-			print i.game.Fitness(),
+			print i.game.Heuristic(),
 		print ")"
 
 		# sort by fitness
-		self.pop.sort(key=lambda i: -i.game.Fitness())
+		self.pop.sort(key=lambda i: i.game.Heuristic())
 
 		# survival of the fittest and reproduction
 		for i in xrange(len(self.pop)/2):

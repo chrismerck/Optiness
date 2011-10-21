@@ -82,8 +82,8 @@ class Maze(Game):
 		self.player.Draw(ret)
 		return ret
 
-	def Fitness(self):
-		return self.player.bestx
+	def Heuristic(self):
+		return xmax - self.player.xpos - 1
 
 	def Reset(self):
 		self.player.Reset()
@@ -98,10 +98,10 @@ class Maze(Game):
 		return xrange(4)
 
 	def Freeze(self):
-		return (self.player.xpos, self.player.ypos, self.player.bestx)
+		return (self.player.xpos, self.player.ypos)
 
 	def Thaw(self, data):
-		self.player.xpos, self.player.ypos, self.player.bestx = data
+		self.player.xpos, self.player.ypos = data
 
 	def Victory(self):
 		return self.player.xpos >= xmax - 1
@@ -127,16 +127,11 @@ class Player:
 		self.xpos = nx
 		self.ypos = ny
 
-		# update bestx
-		if self.xpos > self.bestx:
-			self.bestx = self.xpos
-
 		return True
 
 	def Reset(self):
 		self.xpos = self.xstart
 		self.ypos = self.ystart
-		self.bestx = self.xstart
 
 
 LoadedGame = Maze

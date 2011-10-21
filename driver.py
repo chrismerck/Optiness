@@ -48,20 +48,20 @@ def main():
 
 	running = True
 	while running:
-		# process events (just "quit" for now)
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				running = False
-			else: # pass other events on to the pathfinder in case it takes input
-				brain.Event(event)
-
-		# let the pathfinder take a step, get the screen from the game
-		brain.Step()
-		surf = brain.Draw()
-		if surf is not None:
-			# scale it, and show it
-			scaled = pygame.transform.scale(surf, (pxmax,pymax))
-			screen.blit(scaled, scaled.get_rect())
+		# let the pathfinder take a step, get screens to show throughout
+		for surf in brain.Step():
+			# process events
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					running = False
+				else: # pass other events on to the pathfinder in case it takes input
+					brain.Event(event)
+			# if relevant, draw the screen
+			if surf is not None:
+				# scale it, and show it
+				scaled = pygame.transform.scale(surf, (pxmax,pymax))
+				screen.blit(scaled, scaled.get_rect())
+			pygame.display.flip()
 		pygame.display.flip()
 
 		if brain.Victory(): running = False

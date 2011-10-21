@@ -12,7 +12,7 @@ from skeleton_solver import Brain
 class Inception(Brain):
 	name = 'inception'
 
-	def __init__(self, game, depthfactor = 1):
+	def __init__(self, game, depthfactor = 1, storefringe = True):
 		self.supported_games = [ 'maze', 'snes' ]
 		Brain.__init__(self, game)
 		self.depthfactor = depthfactor
@@ -26,6 +26,7 @@ class Inception(Brain):
 		if sol is not None:
 			self.input_log = sol
 		self.maxdepth += self.depthfactor
+		return (self.game.Draw(),)
 
 	def _DFS(self, node, depth = 0):
 		for i in self.game.ValidInputs():

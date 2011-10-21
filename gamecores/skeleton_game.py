@@ -25,6 +25,9 @@ class Game:
 	def Victory(self):
 		return True
 
+	def Heuristic(self): # under-or-equal-estimate of input-frames to goal
+		return 0
+
 	def Freeze(self): # return some copy of the game's state
 		return dumps(self.__dict__)
 
