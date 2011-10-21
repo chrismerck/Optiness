@@ -20,6 +20,9 @@ class Brain:
 	def Draw(self):
 		return self.game.Draw()
 
+	def Victory(self):
+		return self.game.Victory()
+
 	def Path(self):
 		return []
 

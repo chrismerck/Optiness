@@ -64,7 +64,7 @@ def main():
 			screen.blit(scaled, scaled.get_rect())
 		pygame.display.flip()
 
-		if game.Victory(): running = False
+		if brain.Victory(): running = False
 
 	cPickle.dump( brain.Path(), open('inputstring.pickle', 'w') )
 

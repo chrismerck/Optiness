@@ -94,6 +94,15 @@ class Maze(Game):
 		directions = [up, down, left, right]
 		self.player.Move(*directions[n])
 
+	def ValidInputs(self):
+		return xrange(4)
+
+	def Freeze(self):
+		return (self.player.xpos, self.player.ypos, self.player.bestx)
+
+	def Thaw(self, data):
+		self.player.xpos, self.player.ypos, self.player.bestx = data
+
 	def Victory(self):
 		return self.player.xpos >= xmax - 1
 

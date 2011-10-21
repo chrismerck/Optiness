@@ -31,7 +31,10 @@ class Game:
 	def Thaw(self, state): # restore a saved state returned by Freeze
 		self.__dict__ = loads(state)
 
-	def Input(self, data): # set the state of the "control pad"
+	def Input(self, data): # set the state of the "control pad" and run a frame
 		pass
+
+	def ValidInputs(self):
+		return []
 
 LoadedGame = Game
