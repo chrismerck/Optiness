@@ -65,6 +65,7 @@ class SuperOpti(Game):
 					val = val & mask
 					if val not in self.valid_inputs:
 						self.valid_inputs.append(val)
+		print 'generated', len(self.valid_inputs), 'valid inputs'
 
 	def _video_refresh_cb(self, data, width, height, hires, interlace, overscan, pitch):
 		self.snesfb = (data, width, height, pitch)
@@ -78,6 +79,7 @@ class SuperOpti(Game):
 
 	def Thaw(self, state):
 		self.emu.unserialize(state)
+		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
 
 	# only convert the screen from 16-bit format to RGB888 when we need it
 	def Draw(self):
@@ -90,6 +92,7 @@ class SuperOpti(Game):
 		self.pad = pad
 		self.emu.run()
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
+		#print ord(self.wram[0xF36]),
 
 	# TODO: figure out a nice generic way to map RAM values to this and Victory
 	def Heuristic(self):
@@ -97,6 +100,6 @@ class SuperOpti(Game):
 
 	def Victory(self):
 		if self.wram is None: return False
-		return self.wram[0xF34] > 0 # mario's score
+		return self.wram[0xF36] > 0 # mario's score
 
 LoadedGame = SuperOpti
