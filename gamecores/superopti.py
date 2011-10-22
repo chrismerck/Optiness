@@ -11,20 +11,19 @@ xmax = 256
 ymax = 224
 scale = 1
 
-# input bits, for reference:
-# 0000RLXA><v^teYB = 16-bit order
-# in other words, B, Y, Se, St, ^, v, <, >, A, X, L, R = range(12)
-
 defaultargs = {	'rom':       'smw.sfc',
 				'libsnes':   'snes.dll',
 				'initstate': 'smw.state',
 				'inputmask': 0b000011110011 } # just the dpad and B/Y
 
+# input bits, for reference:
+# 0000RLXA><v^teYB = 16-bit order
+# in other words, B, Y, Se, St, ^, v, <, >, A, X, L, R = range(12)
+
 class SuperOpti(Game):
 	name = 'superopti'
 	def __init__(self, args = {}):
-		if args == {}: args = defaultargs
-		Game.__init__(self, args)
+		Game.__init__(self, args, defaultargs)
 
 		if 'inputmask' not in args:  args['inputmask'] = 0b111111111111
 		self.GenerateValidInputs(args['inputmask'])

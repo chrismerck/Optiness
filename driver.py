@@ -53,8 +53,7 @@ def main():
 	screen = pygame.display.set_mode((pxmax,pymax))
 
 	game = game_mod.LoadedGame(game_args)
-	brain = brain_mod.LoadedBrain(game) #, brain_args
-
+	brain = brain_mod.LoadedBrain(game, brain_args)
 	running = True
 	while running:
 		# let the pathfinder take a step, get screens to show throughout
@@ -78,7 +77,9 @@ def main():
 
 	result = {
 		'game': game_mod.LoadedGame.name,
+		'game_args': game_args,
 		'brain': brain_mod.LoadedBrain.name,
+		'brain_args': brain_args,
 		'path': brain.Path(),
 		'state': game.Freeze()
 	}

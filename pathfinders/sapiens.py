@@ -9,11 +9,13 @@ import pygame
 
 from skeleton_solver import Brain
 
+defaultargs = {}
+
 class Sapiens(Brain):
 	name = 'sapiens'
 
-	def __init__(self, game):
-		Brain.__init__(self, game)
+	def __init__(self, game, args = {}):
+		Brain.__init__(self, game, args, defaultargs)
 
 		pygame.joystick.init()
 		self.joy = pygame.joystick.Joystick(0)

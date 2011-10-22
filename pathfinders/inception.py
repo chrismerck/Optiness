@@ -9,14 +9,17 @@ import pygame
 
 from skeleton_solver import Brain
 
+# storefringe is currently unused
+defaultargs = { 'depthfactor': 1, 'storefringe': 0 }
+
 class Inception(Brain):
 	name = 'inception'
 
-	def __init__(self, game, depthfactor = 1, storefringe = True):
-		Brain.__init__(self, game)
+	def __init__(self, game, args = {}):
+		Brain.__init__(self, game, args, defaultargs)
 
-		self.depthfactor = depthfactor
-		self.maxdepth = depthfactor
+		self.depthfactor = self.args['depthfactor']
+		self.maxdepth = self.depthfactor
 		self.input_log = None
 		self.init_state = game.Freeze()
 

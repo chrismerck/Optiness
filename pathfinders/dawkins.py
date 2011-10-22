@@ -12,13 +12,14 @@ import random
 
 from skeleton_solver import Brain
 
-dnalen = 300
+defaultargs = { 'popsize': 30, 'dnalen': 300 }
 
 class Indiv:
-	def __init__(self, game):
+	def __init__(self, game, dnalen):
 		self.game = game
 		self.init_state = self.game.Freeze()
 		self.dna = [random.choice(self.game.ValidInputs()) for i in xrange(dnalen)]
+		self.dnalen = dnalen
 		self.fitness = float("inf")
 
 	def Run(self):
@@ -43,6 +44,7 @@ class Indiv:
 		avg_point_mutations = 1
 		avg_swaps = 10
 		avg_deletions = 3
+		dnalen = self.dnalen
 
 		# perform point mutations
 		npoint = int(random.random()*strength*avg_point_mutations)
@@ -75,14 +77,18 @@ class Indiv:
 class Dawkins(Brain):
 	name = 'dawkins'
 
-	def __init__(self, game, popsize = 30):
-		Brain.__init__(self, game)
-		self.pop = [Indiv(game) for i in xrange(popsize)]
-		self.input_string = (float("inf"), [])
+	def __init__(self, game, args = {}):
+		Brain.__init__(self, game, args, defaultargs)
 
+		# populate
+		dnalen = self.args['dnalen']
+		popsize = self.args['popsize']
+		self.pop = [Indiv(game, dnalen) for i in xrange(popsize)]
+
+		self.input_string = (float("inf"), []) # pair of (heur, path)
+
+	# we deviate a bit from the biblical record here
 	def Step(self):
-		# we deviate a bit from the biblical record here
-
 		# evaluate fitnesses
 		print "(",
 		for i in self.pop:
@@ -108,6 +114,9 @@ class Dawkins(Brain):
 
 	def Path(self):
 		return self.input_string[1]
+
+	def Victory(self):
+		return len(self.input_string[1]) > 0
 
 
 LoadedBrain = Dawkins

@@ -8,8 +8,16 @@ Darren Alton
 class Brain:
 	name = 'skeleton solver'
 
-	def __init__(self, game):
+	def __init__(self, game, args = {}, defaultargs = {}):
 		self.game = game
+		if args == {}: args = defaultargs
+		# try to convert args to appropriate types (from str)
+		for i in args:
+			try:
+				args[i] = eval(args[i], {"__builtins__":None}, {})
+			except:
+				pass
+		self.args = args
 
 	# Note: this should 'yield' pygame surfaces throughout execution,
 	#       but it's acceptable to just 'return' a 1-tuple when finished.

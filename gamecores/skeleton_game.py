@@ -8,15 +8,22 @@ Darren Alton
 import pygame
 from cPickle import dumps, loads
 
-xmax = 100 # width of the screen
-ymax = 80  # height of the screen
+xmax = 320 # width of the screen
+ymax = 200  # height of the screen
 scale = 1
 
 class Game:
 	name = 'skeleton game'
 
-	def __init__(self, args={}):
-		pass
+	def __init__(self, args={}, defaultargs={}):
+		if args == {}: args = defaultargs
+		# try to convert args to appropriate types (from str)
+		for i in args:
+			try:
+				args[i] = eval(args[i], {"__builtins__":None}, {})
+			except:
+				pass
+		self.args = args
 
 	# return a copy of the "screen" for visualization
 	def Draw(self):

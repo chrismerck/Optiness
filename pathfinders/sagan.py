@@ -10,6 +10,8 @@ import pygame
 from skeleton_solver import Brain
 from heapq import *
 
+defaultargs = {}
+
 # for the purposes of minheaping our savestates...
 class StateWrapper:
 	def __init__(self, state, f):
@@ -23,8 +25,8 @@ class StateWrapper:
 class Sagan(Brain):
 	name = 'sagan'
 
-	def __init__(self, game):
-		Brain.__init__(self, game)
+	def __init__(self, game, args = {}):
+		Brain.__init__(self, game, args, defaultargs)
 		self.input_log = None
 
 	def Victory(self):

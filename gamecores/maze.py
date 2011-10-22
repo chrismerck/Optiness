@@ -31,9 +31,8 @@ class Maze(Game):
 	name = 'maze'
 
 	def __init__(self, args = {}):
-		Game.__init__(self, args)
-		if args == {}:  args = defaultargs
-		if 'seed' in args:  random.seed(args['seed'])  # God does not play dice
+		Game.__init__(self, args, defaultargs)
+		if 'seed' in self.args:  random.seed(self.args['seed'])  # God does not play dice
 
 		# all wall tiles at first
 		self.world = [[wall for i in xrange(ymax)] for j in xrange(xmax)]
