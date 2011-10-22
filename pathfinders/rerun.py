@@ -19,6 +19,10 @@ class Rerun(Brain):
 
 		self.clock = pygame.time.Clock()
 		loadedfile = cPickle.load(open('inputstring.pickle', 'r'))
+		print 'replaying a run of:\t', loadedfile['game']
+		print 'that was produced by:\t', loadedfile['brain']
+		if loadedfile['game'] != game.__class__.name:
+			raise Exception('loaded input string is for "%s"' % (loadedfile['game']))
 		self.inputstring = loadedfile['path']
 		self.outputstring = []
 

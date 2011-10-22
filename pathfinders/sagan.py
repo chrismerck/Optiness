@@ -12,9 +12,9 @@ from heapq import *
 
 # for the purposes of minheaping our savestates...
 class StateWrapper:
-	def __init__(self, state, fscores):
+	def __init__(self, state, f):
 		self.state = state
-		self.f = fscores
+		self.f = f
 	def __eq__(self, other):
 		return self.state == other.state
 	def __le__(self, other):
@@ -42,27 +42,27 @@ class Sagan(Brain):
 
 	def Step(self):
 		start = self.game.Freeze()
-		f_score = {}
+
+		g = { start: 0 }
+		h = { start: self.game.Heuristic() }
+		f = { start: g[start] + h[start] }
 
 		# singleton-set minheap containing the initial state.
 		# must use StateWrapper so the minheap-related functions work.
-		openset = [ StateWrapper(self.game.Freeze(), f_score) ]
+		openset = [ StateWrapper(start, f) ]
 
 		# we should index these with states rather than wrappers
 		# ... and even that isn't sustainable, so we'll have to
 		#     come up with something better later
 		closedset = set()
 		came_from = {}
-		g_score = { start: 0 }
-		h_score = { start: self.game.Heuristic() }
-
-		f_score[start] = g_score[start] + h_score[start]
 
 		while len(openset) > 0: # while not empty
 			x = heappop(openset).state # get the lowest f=g+h of the openset
 			self.game.Thaw(x)
 			if self.game.Victory():
 				self.input_log = self._ReconstructPath(came_from, x)
+				yield self.game.Draw()
 				return
 
 			closedset.add(x)
@@ -74,19 +74,19 @@ class Sagan(Brain):
 				if y in closedset: continue
 				yield self.game.Draw() # only show if we've not seen this state yet
 
-				tentative_g = g_score[x] + 1
-				yw = StateWrapper(y, f_score)
+				tentative_g = g[x] + 1
+				y_wrapped = StateWrapper(y, f)
 				tentative_better = True
-				if yw not in openset:
-					heappush(openset, yw)
-				elif tentative_g >= g_score[y]:
+				if y_wrapped not in openset:
+					heappush(openset, y_wrapped)
+				elif tentative_g >= g[y]:
 					tentative_better = False
 
 				if tentative_better:
 					came_from[y] = (x, inp)
-					g_score[y] = tentative_g
-					h_score[y] = self.game.Heuristic()
-					f_score[y] = g_score[y] + h_score[y]
+					g[y] = tentative_g
+					h[y] = self.game.Heuristic()
+					f[y] = g[y] + h[y]
 
 
 	def Path(self):
