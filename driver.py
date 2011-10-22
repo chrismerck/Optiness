@@ -66,6 +66,13 @@ def main():
 
 		if brain.Victory(): running = False
 
-	cPickle.dump( brain.Path(), open('inputstring.pickle', 'w') )
+	result = {
+		'game': engine.LoadedGame.name,
+		'brain': solver.LoadedBrain.name,
+		'path': brain.Path(),
+		'state': game.Freeze()
+	}
+	cPickle.dump( result, open('inputstring.pickle', 'w') )
+	pygame.image.save(screen, 'endgame.png')
 
 if __name__ == "__main__":  main()

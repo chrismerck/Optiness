@@ -38,6 +38,6 @@ class Game:
 		pass
 
 	def ValidInputs(self):
-		return []
+		return [0]
 
 LoadedGame = Game

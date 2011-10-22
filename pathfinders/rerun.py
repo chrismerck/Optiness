@@ -18,7 +18,8 @@ class Rerun(Brain):
 		Brain.__init__(self, game)
 
 		self.clock = pygame.time.Clock()
-		self.inputstring = cPickle.load(open('inputstring.pickle', 'r'))
+		loadedfile = cPickle.load(open('inputstring.pickle', 'r'))
+		self.inputstring = loadedfile['path']
 		self.outputstring = []
 
 	def Step(self):

@@ -1,4 +1,20 @@
-(lp1
+(dp1
+S'brain'
+p2
+S'rerun'
+p3
+sS'game'
+p4
+S'maze'
+p5
+sS'state'
+p6
+(I99
+I10
+tp7
+sS'path'
+p8
+(lp9
 I0
 aI0
 aI3
@@ -163,4 +179,4 @@ aI0
 aI0
 aI0
 aI3
-a.
+as.

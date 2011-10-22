@@ -15,7 +15,8 @@ class Brain:
 		self.game = game
 
 	def Step(self):
-		self.game.Input(0)
+		for i in self.game.ValidInputs():
+			self.game.Input(i)
 		return (self.game.Draw(),)
 
 	def Victory(self):

@@ -44,7 +44,8 @@ class Sagan(Brain):
 		start = self.game.Freeze()
 		f_score = {}
 
-		# singleton-set containing the initial state.  must use StateWrappers.
+		# singleton-set minheap containing the initial state.
+		# must use StateWrapper so the minheap-related functions work.
 		openset = [ StateWrapper(self.game.Freeze(), f_score) ]
 
 		# we should index these with states rather than wrappers
@@ -75,12 +76,10 @@ class Sagan(Brain):
 
 				tentative_g = g_score[x] + 1
 				yw = StateWrapper(y, f_score)
+				tentative_better = True
 				if yw not in openset:
 					heappush(openset, yw)
-					tentative_better = True
-				elif tentative_g < g_score[y]:
-					tentative_better = True
-				else:
+				elif tentative_g >= g_score[y]:
 					tentative_better = False
 
 				if tentative_better:
@@ -88,7 +87,6 @@ class Sagan(Brain):
 					g_score[y] = tentative_g
 					h_score[y] = self.game.Heuristic()
 					f_score[y] = g_score[y] + h_score[y]
-					print f_score[y], '=', g_score[y], '+', h_score[y]
 
 
 	def Path(self):
