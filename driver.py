@@ -24,7 +24,7 @@ def main():
 		#usage()
 		sys.exit(2)
 
-	game_mod_name, brain_mod_name = ('maze', 'sapiens')
+	game_mod_name, brain_mod_name = ('maze', 'sagan')
 	for o,a in opts:
 		if o in ('-h', '--help'):
 			usage()
@@ -36,8 +36,8 @@ def main():
 	game_mod = __import__(game_mod_name)
 	brain_mod = __import__(brain_mod_name)
 
-	# we want to make the display output bigger
-	scale = 8
+	# we may want to make the display output bigger
+	scale = game_mod.scale
 	pxmax = game_mod.xmax*scale
 	pymax = game_mod.ymax*scale
 
@@ -59,7 +59,8 @@ def main():
 			# if relevant, draw the screen
 			if surf is not None:
 				# scale it, and show it
-				scaled = pygame.transform.scale(surf, (pxmax,pymax))
+				scaled = surf
+				if scale != 1: scaled = pygame.transform.scale(surf, (pxmax,pymax))
 				screen.blit(scaled, scaled.get_rect())
 			pygame.display.flip()
 		pygame.display.flip()

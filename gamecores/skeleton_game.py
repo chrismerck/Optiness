@@ -10,11 +10,12 @@ from cPickle import dumps, loads
 
 xmax = 100 # width of the screen
 ymax = 80  # height of the screen
+scale = 1
 
 class Game:
 	name = 'skeleton game'
 
-	def __init__(self):
+	def __init__(self, args={}):
 		pass
 
 	# return a copy of the "screen" for visualization

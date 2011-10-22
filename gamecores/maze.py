@@ -14,6 +14,7 @@ from skeleton_game import Game
 
 xmax = 100
 ymax = 80
+scale = 4
 
 wall_color = (180,85,20)
 floor_color = (0,0,0)
@@ -28,8 +29,9 @@ wall = 1
 class Maze(Game):
 	name = 'maze'
 
-	def __init__(self, seed = 1):
-		random.seed(seed)        # God does not play dice
+	def __init__(self, args = {'seed': 1}):
+		Game.__init__(self, args)
+		random.seed(args['seed'])  # God does not play dice
 
 		# all wall tiles at first
 		self.world = [[wall for i in xrange(ymax)] for j in xrange(xmax)]
