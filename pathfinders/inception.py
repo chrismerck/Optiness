@@ -13,8 +13,8 @@ class Inception(Brain):
 	name = 'inception'
 
 	def __init__(self, game, depthfactor = 1, storefringe = True):
-		self.supported_games = [ 'maze', 'snes' ]
 		Brain.__init__(self, game)
+
 		self.depthfactor = depthfactor
 		self.maxdepth = depthfactor
 		self.input_log = None

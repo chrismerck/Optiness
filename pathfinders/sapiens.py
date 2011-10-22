@@ -13,7 +13,6 @@ class Sapiens(Brain):
 	name = 'sapiens'
 
 	def __init__(self, game):
-		self.supported_games = [ 'maze', 'snes' ]
 		Brain.__init__(self, game)
 
 		pygame.joystick.init()

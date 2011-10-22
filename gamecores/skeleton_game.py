@@ -17,26 +17,33 @@ class Game:
 	def __init__(self):
 		pass
 
-	def Draw(self): # return a copy of the "screen" for visualization
+	# return a copy of the "screen" for visualization
+	def Draw(self):
 		ret = pygame.surface.Surface((xmax, ymax))
 		ret.fill((0,123,45))
 		return ret
 
+	# return true if the game has reached a goal state
 	def Victory(self):
 		return True
 
-	def Heuristic(self): # under-or-equal-estimate of input-frames to goal
+	# under-or-equal-estimate of input-frames to goal
+	def Heuristic(self):
 		return 0
 
-	def Freeze(self): # return some copy of the game's state
+	# return some copy of the game's state
+	def Freeze(self):
 		return dumps(self.__dict__)
 
-	def Thaw(self, state): # restore a saved state returned by Freeze
+	# restore a saved state returned by Freeze
+	def Thaw(self, state):
 		self.__dict__ = loads(state)
 
-	def Input(self, data): # set the state of the "control pad" and run a frame
+	# set the state of the "control pad" and run a frame
+	def Input(self, data):
 		pass
 
+	# must return an iterable of all possible inputs
 	def ValidInputs(self):
 		return [0]
 

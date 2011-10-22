@@ -24,7 +24,6 @@ class Sagan(Brain):
 	name = 'sagan'
 
 	def __init__(self, game):
-		self.supported_games = [ 'maze', 'snes' ]
 		Brain.__init__(self, game)
 		self.input_log = None
 

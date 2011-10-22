@@ -11,40 +11,40 @@ import pygame   # this level was removed from Donkey Kong for its NES release
 
 import getopt   # argument parsing
 
-# Optiness engine and solver modules
+# Optiness game and path-finding "brain" modules
 sys.path.append('./gamecores')
 sys.path.append('./pathfinders')
 
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "he:s:", ["help", "engine=", "solver="])
+		opts, args = getopt.getopt(sys.argv[1:], "hg:b:", ["help", "game=", "brain="])
 	except getopt.GetoptError, err:
 		print str(err)
-		usage()
+		#usage()
 		sys.exit(2)
 
-	engine_name, solver_name = ('maze', 'sapiens')
+	game_mod_name, brain_mod_name = ('maze', 'sapiens')
 	for o,a in opts:
 		if o in ('-h', '--help'):
 			usage()
-		elif o in ('-e', '--engine'):
-			engine_name = a
-		elif o in ('-s', '--solver'):
-			solver_name = a
+		elif o in ('-g', '--game'):
+			game_mod_name = a
+		elif o in ('-b', '--brain'):
+			brain_mod_name = a
 
-	engine = __import__(engine_name)
-	solver = __import__(solver_name)
+	game_mod = __import__(game_mod_name)
+	brain_mod = __import__(brain_mod_name)
 
 	# we want to make the display output bigger
 	scale = 8
-	pxmax = engine.xmax*scale
-	pymax = engine.ymax*scale
+	pxmax = game_mod.xmax*scale
+	pymax = game_mod.ymax*scale
 
 	screen = pygame.display.set_mode((pxmax,pymax))
 
-	game = engine.LoadedGame()
-	brain = solver.LoadedBrain(game)
+	game = game_mod.LoadedGame()
+	brain = brain_mod.LoadedBrain(game)
 
 	running = True
 	while running:
@@ -67,8 +67,8 @@ def main():
 		if brain.Victory(): running = False
 
 	result = {
-		'game': engine.LoadedGame.name,
-		'brain': solver.LoadedBrain.name,
+		'game': game_mod.LoadedGame.name,
+		'brain': brain_mod.LoadedBrain.name,
 		'path': brain.Path(),
 		'state': game.Freeze()
 	}

@@ -14,7 +14,6 @@ class Rerun(Brain):
 	name = 'rerun'
 
 	def __init__(self, game):
-		self.supported_games = [ 'maze', 'snes' ]
 		Brain.__init__(self, game)
 
 		self.clock = pygame.time.Clock()

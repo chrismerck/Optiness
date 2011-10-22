@@ -72,10 +72,7 @@ class Dawkins(Brain):
 	name = 'dawkins'
 
 	def __init__(self, game, popsize = 30):
-		# supported games for this solver, just 'maze' for now
-		self.supported_games = [ 'maze' ]
 		Brain.__init__(self, game)
-
 		self.pop = [Indiv(game) for i in xrange(popsize)]
 
 	def Step(self):
