@@ -28,6 +28,9 @@ class Sagan(Brain):
 		Brain.__init__(self, game)
 		self.input_log = None
 
+	def Victory(self):
+		return self.input_log is not None
+
 	def _ReconstructPath(self, came_from, state):
 		if state not in came_from:
 			return []

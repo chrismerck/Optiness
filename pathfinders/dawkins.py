@@ -9,41 +9,31 @@ Object: To reach the right-hand side of the screen.
 
 
 import random
-import copy
 
 from skeleton_solver import Brain
 
-
 dnalen = 300
-
-class Dawkins(Brain):
-	name = 'dawkins'
-
-	def __init__(self, game, popsize = 30):
-		# supported games for this solver, just 'maze' for now
-		self.supported_games = [ 'maze' ]
-
-		Brain.__init__(self, game)
-		self.pop = Population(popsize, game)
-
-	def Step(self):
-		# we deviate a bit from the biblical record here
-		self.pop.Evolve()
-		return (self.game.Draw(),)
-
 
 class Indiv:
 	def __init__(self, game):
 		self.game = game
-		self.dna = [random.choice(self.game.valid_inputs) for i in xrange(dnalen)]
-		self.hist = []
-		self.lastx = 0
-		self.lasty = 0
+		self.init_state = self.game.Freeze()
+		self.dna = [random.choice(self.game.ValidInputs()) for i in xrange(dnalen)]
+		self.fitness = float("inf")
 
 	def Run(self):
-		self.game.Reset()
+		self.game.Thaw(self.init_state)
 		for bp in self.dna:
 			self.game.Input(bp)
+		self.fitness = self.game.Heuristic()
+
+	# for sorting based on fitness
+	def __le__(self, other):
+		return self.fitness <= other.fitness
+
+	def Copy(self, other):
+		self.dna = other.dna[:]
+		self.fitness = other.fitness
 
 	def Mutate(self,strength):
 		avg_point_mutations = 1
@@ -54,7 +44,7 @@ class Indiv:
 		npoint = int(random.random()*strength*avg_point_mutations)
 		for n in xrange(npoint):
 			i = random.randint(0,dnalen-1)
-			self.dna[i] = random.choice(self.game.valid_inputs)
+			self.dna[i] = random.choice(self.game.ValidInputs())
 
 		# perform swap mutations
 		nswap = int(random.random()*strength*avg_swaps)
@@ -76,32 +66,37 @@ class Indiv:
 				self.dna[i]=self.dna[i+1]
 
 			# add a random base at the end to maintain length
-			self.dna[j] = random.choice(self.game.valid_inputs)
+			self.dna[j] = random.choice(self.game.ValidInputs())
 
+class Dawkins(Brain):
+	name = 'dawkins'
 
-# TODO: continue working on making "game" a unit rather than having hooks into "player"
-class Population:
-	def __init__(self, size, game):
-		self.pop = []
-		self.game = game
-		for i in xrange(size):
-			self.pop.append(Indiv(game))
+	def __init__(self, game, popsize = 30):
+		# supported games for this solver, just 'maze' for now
+		self.supported_games = [ 'maze' ]
+		Brain.__init__(self, game)
 
-	def Evolve(self):
+		self.pop = [Indiv(game) for i in xrange(popsize)]
+
+	def Step(self):
+		# we deviate a bit from the biblical record here
+
 		# evaluate fitnesses
 		print "(",
 		for i in self.pop:
 			i.Run()
-			print i.game.Heuristic(),
+			print i.fitness,
 		print ")"
 
-		# sort by fitness
-		self.pop.sort(key=lambda i: i.game.Heuristic())
+		self.pop.sort() # sort by fitness
 
 		# survival of the fittest and reproduction
 		for i in xrange(len(self.pop)/2):
 			j = i+len(self.pop)/2
-			self.pop[j] = copy.deepcopy(self.pop[i])
+			self.pop[j].Copy(self.pop[i])
+
+		self.pop[0].Run()
+		yield self.game.Draw()
 
 		for i in self.pop:
 			i.Mutate(1)

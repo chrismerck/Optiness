@@ -27,7 +27,6 @@ wall = 1
 # Maze game
 class Maze(Game):
 	name = 'maze'
-	valid_inputs = xrange(4)
 
 	def __init__(self, seed = 1):
 		# God does not play dice
@@ -84,9 +83,6 @@ class Maze(Game):
 
 	def Heuristic(self):
 		return xmax - self.player.xpos - 1
-
-	def Reset(self):
-		self.player.Reset()
 
 	def Input(self, n):
 		# directions
