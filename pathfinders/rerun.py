@@ -23,8 +23,8 @@ class Rerun(Brain):
 		loadedfile = cPickle.load(open('inputstring.pickle', 'r'))
 
 		# describe the run
-		print 'replaying a run of:\t', loadedfile['game'], loadedfile['game_args']
-		print 'that was produced by:\t', loadedfile['brain'], loadedfile['brain_args']
+		print 'replaying a run of:\t', loadedfile['game'], '\t', loadedfile['game_args']
+		print 'that was produced by:\t', loadedfile['brain'], '\t', loadedfile['brain_args']
 		if loadedfile['game'] != game.__class__.name:
 			raise Exception('loaded input string is for "%s"' % (loadedfile['game']))
 		# commented out until we figure out a good way to handle defaultargs being used

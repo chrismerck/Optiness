@@ -18,11 +18,14 @@ sys.path.append('./pathfinders')
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hg:b:", ["help", "game=", "brain="])
+		opts, args = getopt.getopt(sys.argv[1:], "hg:b:s:", ["help", "game=", "brain=", "scale="])
 	except getopt.GetoptError, err:
 		print str(err)
 		#usage()
 		sys.exit(2)
+
+	# we may want to make the display output bigger
+	scale = 1
 
 	game_mod_name, brain_mod_name = ('maze', 'sagan')
 	game_args, brain_args = ({}, {})
@@ -41,19 +44,21 @@ def main():
 			for i in subargs[1:]:
 				key,val = i.split(':')
 				brain_args[key] = val
+		elif o in ('-s', '--scale'):
+			scale = int(a)
 
 	game_mod = __import__(game_mod_name)
-	brain_mod = __import__(brain_mod_name)
-
-	# we may want to make the display output bigger
-	scale = game_mod.scale
-	pxmax = game_mod.xmax*scale
-	pymax = game_mod.ymax*scale
-
-	screen = pygame.display.set_mode((pxmax,pymax))
-
 	game = game_mod.LoadedGame(game_args)
+
+	brain_mod = __import__(brain_mod_name)
 	brain = brain_mod.LoadedBrain(game, brain_args)
+
+	xmax, ymax = brain.ScreenSize()
+	xmax = xmax*scale
+	ymax = ymax*scale
+
+	screen = pygame.display.set_mode((xmax,ymax))
+
 	running = True
 	while running:
 		# let the pathfinder take a step, get screens to show throughout
@@ -68,7 +73,7 @@ def main():
 			if surf is not None:
 				# scale it, and show it
 				scaled = surf
-				if scale != 1: scaled = pygame.transform.scale(surf, (pxmax,pymax))
+				if scale != 1: scaled = pygame.transform.scale(surf, (xmax,ymax))
 				screen.blit(scaled, scaled.get_rect())
 			pygame.display.flip()
 		pygame.display.flip()

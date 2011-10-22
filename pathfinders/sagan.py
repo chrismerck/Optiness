@@ -12,6 +12,9 @@ from heapq import *
 
 defaultargs = {}
 
+# NOTE: currently this implementation has some bugs,
+# but it will still find a 'good' path.  investigation ongoing.
+
 # for the purposes of minheaping our savestates...
 class StateWrapper:
 	def __init__(self, state, f):

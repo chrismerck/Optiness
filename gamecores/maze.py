@@ -12,10 +12,6 @@ import random
 
 from skeleton_game import Game
 
-xmax = 100
-ymax = 80
-scale = 4
-
 wall_color = (180,85,20)
 floor_color = (0,0,0)
 player_color = (200,200,200)
@@ -24,7 +20,8 @@ player_color = (200,200,200)
 floor = 0
 wall = 1
 
-defaultargs = {	'seed':  1 }
+defaultargs = {	'seed':   1,
+				'screen': (100, 80) }
 
 # Maze game
 class Maze(Game):
@@ -33,6 +30,9 @@ class Maze(Game):
 	def __init__(self, args = {}):
 		Game.__init__(self, args, defaultargs)
 		if 'seed' in self.args:  random.seed(self.args['seed'])  # God does not play dice
+
+		xmax, ymax = self.args['screen']
+		self.w, self.h = (xmax, ymax)
 
 		# all wall tiles at first
 		self.world = [[wall for i in xrange(ymax)] for j in xrange(xmax)]
@@ -78,7 +78,7 @@ class Maze(Game):
 		return ret
 
 	def Heuristic(self):
-		return xmax - self.xpos - 1
+		return self.w - self.xpos - 1
 
 	def Input(self, n):
 		# directions
@@ -93,7 +93,7 @@ class Maze(Game):
 		else:    ny += vel
 
 		# if we didn't run into a wall or out of bounds, that's our new position
-		if nx < xmax and self.world[nx][ny] == floor:
+		if nx < self.w and self.world[nx][ny] == floor:
 			self.xpos = nx
 			self.ypos = ny
 
@@ -107,7 +107,8 @@ class Maze(Game):
 		self.xpos, self.ypos = data
 
 	def Victory(self):
-		return self.xpos >= xmax - 1
+		return self.xpos >= self.w - 1
+
 
 
 LoadedGame = Maze

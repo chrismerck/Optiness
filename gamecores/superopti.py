@@ -7,14 +7,11 @@ from skeleton_game import Game
 from snes import core as snes_core
 from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 
-xmax = 256
-ymax = 224
-scale = 1
-
-defaultargs = {	'rom':       'smw.sfc',
-				'libsnes':   'snes.dll',
+defaultargs = {	'libsnes':   'snes.dll',
+				'rom':       'smw.sfc',
 				'initstate': 'smw.state',
-				'inputmask': 0b000011110011 } # just the dpad and B/Y
+				'inputmask': 0b000011110011,  # just the dpad and B/Y
+				'screen':    (256, 224) }
 
 # input bits, for reference:
 # 0000RLXA><v^teYB = 16-bit order

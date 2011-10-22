@@ -8,21 +8,23 @@ Darren Alton
 import pygame
 from cPickle import dumps, loads
 
-xmax = 320 # width of the screen
-ymax = 200  # height of the screen
-scale = 1
+xmax = 320 # fallback width of the screen
+ymax = 200 # fallback height of the screen
 
 class Game:
 	name = 'skeleton game'
 
 	def __init__(self, args={}, defaultargs={}):
-		if args == {}: args = defaultargs
 		# try to convert args to appropriate types (from str)
 		for i in args:
 			try:
 				args[i] = eval(args[i], {"__builtins__":None}, {})
 			except:
 				pass
+		# load default values for any keys not given
+		for i in defaultargs:
+			if i not in args:
+				args[i] = defaultargs[i]
 		self.args = args
 
 	# return a copy of the "screen" for visualization
@@ -54,5 +56,10 @@ class Game:
 	# must return an iterable of all possible inputs
 	def ValidInputs(self):
 		return [0]
+
+	# return the screen (width, height, scale) that should be used
+	def ScreenSize(self):
+		if 'screen' in self.args:  return self.args['screen']
+		return (xmax, ymax)
 
 LoadedGame = Game

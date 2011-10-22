@@ -10,13 +10,16 @@ class Brain:
 
 	def __init__(self, game, args = {}, defaultargs = {}):
 		self.game = game
-		if args == {}: args = defaultargs
 		# try to convert args to appropriate types (from str)
 		for i in args:
 			try:
 				args[i] = eval(args[i], {"__builtins__":None}, {})
 			except:
 				pass
+		# load default values for any keys not given
+		for i in defaultargs:
+			if i not in args:
+				args[i] = defaultargs[i]
 		self.args = args
 
 	# Note: this should 'yield' pygame surfaces throughout execution,
@@ -38,5 +41,10 @@ class Brain:
 	# handle events from pygame, if relevant
 	def Event(self, evt):
 		pass
+
+	# return the screen (width, height, scale) that should be used
+	def ScreenSize(self):
+		return self.game.ScreenSize()
+
 
 LoadedBrain = Brain
