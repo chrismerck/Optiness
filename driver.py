@@ -25,13 +25,22 @@ def main():
 		sys.exit(2)
 
 	game_mod_name, brain_mod_name = ('maze', 'sagan')
+	game_args, brain_args = ({}, {})
 	for o,a in opts:
 		if o in ('-h', '--help'):
 			usage()
 		elif o in ('-g', '--game'):
-			game_mod_name = a
+			subargs = a.split(',')
+			game_mod_name = subargs[0]
+			for i in subargs[1:]:
+				key,val = i.split(':')
+				game_args[key] = val
 		elif o in ('-b', '--brain'):
-			brain_mod_name = a
+			subargs = a.split(',')
+			brain_mod_name = subargs[0]
+			for i in subargs[1:]:
+				key,val = i.split(':')
+				brain_args[key] = val
 
 	game_mod = __import__(game_mod_name)
 	brain_mod = __import__(brain_mod_name)
@@ -43,8 +52,8 @@ def main():
 
 	screen = pygame.display.set_mode((pxmax,pymax))
 
-	game = game_mod.LoadedGame()
-	brain = brain_mod.LoadedBrain(game)
+	game = game_mod.LoadedGame(game_args)
+	brain = brain_mod.LoadedBrain(game) #, brain_args
 
 	running = True
 	while running:

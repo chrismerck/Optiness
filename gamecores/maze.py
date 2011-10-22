@@ -24,14 +24,16 @@ player_color = (200,200,200)
 floor = 0
 wall = 1
 
+defaultargs = {	'seed':  1 }
 
 # Maze game
 class Maze(Game):
 	name = 'maze'
 
-	def __init__(self, args = {'seed': 1}):
+	def __init__(self, args = {}):
 		Game.__init__(self, args)
-		random.seed(args['seed'])  # God does not play dice
+		if args == {}:  args = defaultargs
+		if 'seed' in args:  random.seed(args['seed'])  # God does not play dice
 
 		# all wall tiles at first
 		self.world = [[wall for i in xrange(ymax)] for j in xrange(xmax)]

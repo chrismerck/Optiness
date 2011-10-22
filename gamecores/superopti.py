@@ -11,23 +11,32 @@ xmax = 256
 ymax = 224
 scale = 1
 
+# input bits, for reference:
 # 0000RLXA><v^teYB = 16-bit order
 # in other words, B, Y, Se, St, ^, v, <, >, A, X, L, R = range(12)
 
+defaultargs = {	'rom':       'smw.sfc',
+				'libsnes':   'snes.dll',
+				'initstate': 'smw.state',
+				'inputmask': 0b000011110011 } # just the dpad and B/Y
+
 class SuperOpti(Game):
 	name = 'superopti'
-	def __init__(self, args = {
-			'rom':       'smw.sfc',
-			'libsnes':   'snes.dll',
-			'initstate': 'smw.state',
-			'inputmask': 0b000011110011 }):
+	def __init__(self, args = {}):
+		if args == {}: args = defaultargs
 		Game.__init__(self, args)
+
+		if 'inputmask' not in args:  args['inputmask'] = 0b111111111111
 		self.GenerateValidInputs(args['inputmask'])
 
 		# load the libsnes core and feed the emulator a ROM
 		self.emu = snes_core.EmulatedSNES(args['libsnes'])
 		self.emu.load_cartridge_normal(open(args['rom'], 'rb').read())
-		self.emu.unserialize(open(args['initstate'],'rb').read())
+
+		# load a starting state if one was provided
+		if 'initstate' in args:
+			self.emu.unserialize(open(args['initstate'],'rb').read())
+
 		# register drawing and input-reading callbacks
 		self.emu.set_video_refresh_cb(self._video_refresh_cb)
 		self.emu.set_input_state_cb(self._input_state_cb)
@@ -53,6 +62,7 @@ class SuperOpti(Game):
 			for rldu in dpad:
 				for teYB in xrange(0b10000):
 					val = (RLXA << 8) | (rldu << 4) | teYB
+					val = val & mask
 					if val not in self.valid_inputs:
 						self.valid_inputs.append(val)
 
