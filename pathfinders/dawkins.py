@@ -23,9 +23,13 @@ class Indiv:
 
 	def Run(self):
 		self.game.Thaw(self.init_state)
+		steps = 0
 		for bp in self.dna:
 			self.game.Input(bp)
+			steps += 1
+			if self.game.Victory(): return steps
 		self.fitness = self.game.Heuristic()
+		return -1
 
 	# for sorting based on fitness
 	def __le__(self, other):
@@ -74,6 +78,7 @@ class Dawkins(Brain):
 	def __init__(self, game, popsize = 30):
 		Brain.__init__(self, game)
 		self.pop = [Indiv(game) for i in xrange(popsize)]
+		self.input_string = (float("inf"), [])
 
 	def Step(self):
 		# we deviate a bit from the biblical record here
@@ -81,7 +86,10 @@ class Dawkins(Brain):
 		# evaluate fitnesses
 		print "(",
 		for i in self.pop:
-			i.Run()
+			win_steps = i.Run()
+			if win_steps > -1:
+				if win_steps < self.input_string[0]:
+					self.input_string = (win_steps, i.dna)
 			print i.fitness,
 		print ")"
 
@@ -97,6 +105,9 @@ class Dawkins(Brain):
 
 		for i in self.pop:
 			i.Mutate(1)
+
+	def Path(self):
+		return self.input_string[1]
 
 
 LoadedBrain = Dawkins
