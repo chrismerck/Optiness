@@ -57,6 +57,10 @@ class Game:
 	def ValidInputs(self):
 		return [0]
 
+	# return a dict of button mappings to input bitmasks
+	def HumanInputs(self):
+		return { 0: 0 }
+
 	# return the screen (width, height, scale) that should be used
 	def ScreenSize(self):
 		if 'screen' in self.args:  return self.args['screen']

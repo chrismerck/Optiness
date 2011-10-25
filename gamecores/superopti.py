@@ -19,6 +19,21 @@ defaultargs = {	'libsnes':   'snes.dll',
 
 class SuperOpti(Game):
 	name = 'superopti'
+
+	def HumanInputs(self):
+		return { 'hat0_up':    0b000000010000,
+				 'hat0_down':  0b000000100000,
+				 'hat0_left':  0b000001000000,
+				 'hat0_right': 0b000010000000,
+							0: 0b000000000001,
+							1: 0b000100000000,
+							2: 0b000000000010,
+							3: 0b001000000000,
+							4: 0b010000000000,
+							5: 0b100000000000,
+							6: 0b000000000100,
+							7: 0b000000001000  }
+
 	def __init__(self, args = {}):
 		Game.__init__(self, args, defaultargs)
 

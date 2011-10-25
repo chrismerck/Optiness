@@ -27,9 +27,17 @@ defaultargs = {	'seed':   1,
 class Maze(Game):
 	name = 'maze'
 
+	def HumanInputs(self):
+		return self.inputs
+
 	def __init__(self, args = {}):
 		Game.__init__(self, args, defaultargs)
 		if 'seed' in self.args:  random.seed(self.args['seed'])  # God does not play dice
+
+		self.inputs = { 'hat0_up':    0b0001,
+						'hat0_down':  0b0010,
+						'hat0_left':  0b0100,
+						'hat0_right': 0b1000 }
 
 		xmax, ymax = self.args['screen']
 		self.w, self.h = (xmax, ymax)
@@ -86,11 +94,12 @@ class Maze(Game):
 
 		nx = self.xpos
 		ny = self.ypos
-		vel = ((n&1)*2) - 1 # either +1 or -1
-
-		# either vertical or horizontal
-		if n&2:  nx += vel
-		else:    ny += vel
+		if n & 0b0011: # vertical
+			if n & 0b0001: ny -= 1 # up
+			else:          ny += 1 # down
+		else: # horizontal
+			if n & 0b0100: nx -= 1 # left
+			else:          nx += 1 # right
 
 		# if we didn't run into a wall or out of bounds, that's our new position
 		if nx < self.w and self.world[nx][ny] == floor:
@@ -98,7 +107,7 @@ class Maze(Game):
 			self.ypos = ny
 
 	def ValidInputs(self):
-		return xrange(4)
+		return self.inputs.values()
 
 	def Freeze(self):
 		return (self.xpos, self.ypos)

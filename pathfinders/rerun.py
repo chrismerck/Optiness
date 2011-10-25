@@ -45,4 +45,7 @@ class Rerun(Brain):
 	def Path(self):
 		return self.outputstring
 
+	def Victory(self):
+		return len(self.inputstring) <= 0
+
 LoadedBrain = Rerun
