@@ -11,6 +11,7 @@ from skeleton_solver import Brain
 from heapq import *
 
 defaultargs = {}
+EDGE = 3
 
 class SaganNode:
 	def __init__(self, game, parent=None, input=None):
@@ -24,7 +25,7 @@ class SaganNode:
 	def Adopt(self, child, input):
 		child.parent = self
 		child.input = input
-		child.g = self.g + 1
+		child.g = self.g + EDGE
 
 	def GetState(self):
 		# this is a function so we can deal with making a disk cache
@@ -52,6 +53,7 @@ class Sagan(Brain):
 	def __init__(self, game, args = {}):
 		Brain.__init__(self, game, args, defaultargs)
 		self.input_log = None
+		self.terminated = False
 
 	def Step(self):
 		# singleton-set minheap containing the initial state.
@@ -59,7 +61,7 @@ class Sagan(Brain):
 		closedset = set()
 
 		# while lowest rank in OPEN is not the GOAL
-		while not openset[0].Victory():
+		while not openset[0].Victory() and not self.terminated:
 			# get the best (lowest f=g+h) of the fringe
 			x = heappop(openset)
 			closedset.add(x)
@@ -73,7 +75,7 @@ class Sagan(Brain):
 
 				tentative_better = True
 				if y not in openset:  heappush(openset, y)
-				elif x.g+1 >= y.g:  tentative_better = False
+				elif x.g+EDGE >= y.g:  tentative_better = False
 
 				if tentative_better:  x.Adopt(y, inp)
 
@@ -83,6 +85,9 @@ class Sagan(Brain):
 
 	def Victory(self):
 		return self.input_log is not None
+
+	def Event(self, evt):
+		if evt.type == pygame.QUIT:  self.terminated = True
 
 	def Path(self):
 		return self.input_log

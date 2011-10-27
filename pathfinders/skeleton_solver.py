@@ -6,7 +6,7 @@ Darren Alton
 """
 
 class Brain:
-	name = 'skeleton solver'
+	name = 'unnamed solver'
 
 	def __init__(self, game, args = {}, defaultargs = {}):
 		self.game = game

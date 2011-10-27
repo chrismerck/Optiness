@@ -33,6 +33,7 @@ class Rerun(Brain):
 
 		self.inputstring = loadedfile['path']
 		self.outputstring = []
+		print 'with', len(self.inputstring), 'frames of input'
 
 	def Step(self):
 		self.clock.tick(self.fps)

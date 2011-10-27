@@ -7,10 +7,10 @@ from skeleton_game import Game
 from snes import core as snes_core
 from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 
-defaultargs = {	'libsnes':   'snes.dll',
-				'rom':       'smw.sfc',
-				'initstate': 'smw.state',
-				'inputmask': 0b000011110011,  # just the dpad and B/Y
+defaultargs = {	'libsnes':   'nes.dll',
+				'rom':       'smb.nes',
+				'initstate': 'smb.state',
+				'inputmask': 0b000010000000, # very limited for testing purposes
 				'screen':    (256, 224) }
 
 # input bits, for reference:
@@ -77,6 +77,7 @@ class SuperOpti(Game):
 					val = val & mask
 					if val not in self.valid_inputs:
 						self.valid_inputs.append(val)
+		#self.valid_inputs.remove(0)
 		print 'generated', len(self.valid_inputs), 'valid inputs'
 
 	def _video_refresh_cb(self, data, width, height, hires, interlace, overscan, pitch):
@@ -104,17 +105,17 @@ class SuperOpti(Game):
 		self.pad = pad
 		self.emu.run()
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
+		if self.wram is None: print 'derp'
 		#print ord(self.wram[0xF36]),
 
 	# TODO: figure out a nice generic way to map RAM values to this and Victory
 	def Heuristic(self):
+		if self.wram is None:  return 0
+		print ord(self.wram[0x86]),
+		return 100 - ord(self.wram[0x86])
 		return 0
 
 	def Victory(self):
-		if self.wram is None: return False
-		if self.wram[0xF36] > 0: # mario's score
-			print self.wram[0xF34:0xF37]
-			return True
-		print False
+		return self.wram is not None and ord(self.wram[0x86]) >= 100 # mario's x position
 
 LoadedGame = SuperOpti

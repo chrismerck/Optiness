@@ -65,10 +65,9 @@ def main():
 		for surf in brain.Step():
 			# process events
 			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					running = False
-				else: # pass other events on to the pathfinder in case it takes input
-					brain.Event(event)
+				# pass events on to the pathfinder in case it takes input etc.
+				brain.Event(event)
+				if event.type == pygame.QUIT:  running = False
 			# if relevant, draw the screen
 			if surf is not None:
 				# scale it, and show it

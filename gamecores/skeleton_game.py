@@ -12,7 +12,7 @@ xmax = 320 # fallback width of the screen
 ymax = 200 # fallback height of the screen
 
 class Game:
-	name = 'skeleton game'
+	name = 'unnamed game'
 
 	def __init__(self, args={}, defaultargs={}):
 		# try to convert args to appropriate types (from str)
