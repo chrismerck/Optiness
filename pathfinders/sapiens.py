@@ -9,7 +9,7 @@ import pygame
 
 from skeleton_solver import Brain
 
-defaultargs = {}
+defaultargs = { 'joynum': 0 }
 
 class Sapiens(Brain):
 	name = 'sapiens'
@@ -18,7 +18,7 @@ class Sapiens(Brain):
 		Brain.__init__(self, game, args, defaultargs)
 
 		pygame.joystick.init()
-		self.joy = pygame.joystick.Joystick(0)
+		self.joy = pygame.joystick.Joystick(self.args['joynum'])
 		self.joy.init()
 		print self.joy.get_name()
 

@@ -33,13 +33,13 @@ def main():
 		if o in ('-h', '--help'):
 			usage()
 		elif o in ('-g', '--game'):
-			subargs = a.split(',')
+			subargs = a.split(';')
 			game_mod_name = subargs[0]
 			for i in subargs[1:]:
 				key,val = i.split(':')
 				game_args[key] = val
 		elif o in ('-b', '--brain'):
-			subargs = a.split(',')
+			subargs = a.split(';')
 			brain_mod_name = subargs[0]
 			for i in subargs[1:]:
 				key,val = i.split(':')

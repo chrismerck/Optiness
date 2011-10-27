@@ -9,7 +9,8 @@ import pygame, cPickle
 
 from skeleton_solver import Brain
 
-defaultargs = { 'fps': 60 } # run at 60fps because we have a human watching
+defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
+				'file': 'inputstring.pickle' }
 
 class Rerun(Brain):
 	name = 'rerun'
@@ -20,16 +21,15 @@ class Rerun(Brain):
 		self.clock = pygame.time.Clock()
 		self.fps = self.args['fps']
 
-		loadedfile = cPickle.load(open('inputstring.pickle', 'r'))
+		loadedfile = cPickle.load(open(self.args['file'], 'r'))
 
 		# describe the run
 		print 'replaying a run of:\t', loadedfile['game'], '\t', loadedfile['game_args']
 		print 'that was produced by:\t', loadedfile['brain'], '\t', loadedfile['brain_args']
 		if loadedfile['game'] != game.__class__.name:
 			raise Exception('loaded input string is for "%s"' % (loadedfile['game']))
-		# commented out until we figure out a good way to handle defaultargs being used
-		#if loadedfile['game_args'] != game.args:
-		#	raise Exception('game_args mismatch:\n%s\n%s' % (loadedfile['game_args'], game.args))
+		if loadedfile['game_args'] != game.args:
+			raise Exception('game_args mismatch:\n%s\n%s' % (loadedfile['game_args'], game.args))
 
 		self.inputstring = loadedfile['path']
 		self.outputstring = []

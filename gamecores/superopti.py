@@ -20,6 +20,28 @@ defaultargs = {	'libsnes':   'snes.dll',
 class SuperOpti(Game):
 	name = 'superopti'
 
+	def __init__(self, args = {}):
+		Game.__init__(self, args, defaultargs)
+		self.GenerateValidInputs(args['inputmask'])
+
+		# load the libsnes core and feed the emulator a ROM
+		self.emu = snes_core.EmulatedSNES(args['libsnes'])
+		self.emu.load_cartridge_normal(open(args['rom'], 'rb').read())
+
+		# load a starting state if one was provided
+		if args['initstate']:
+			try:
+				f = open(args['initstate'], 'rb')
+				self.emu.unserialize(f.read())
+			except IOError: pass
+
+		# register drawing and input-reading callbacks
+		self.emu.set_video_refresh_cb(self._video_refresh_cb)
+		self.emu.set_input_state_cb(self._input_state_cb)
+		# don't put anything in the work ram and framebuffer until the emulator can
+		self.wram = None
+		self.snesfb = None
+
 	def HumanInputs(self):
 		return { 'hat0_up':    0b000000010000,
 				 'hat0_down':  0b000000100000,
@@ -33,27 +55,6 @@ class SuperOpti(Game):
 							5: 0b100000000000,
 							6: 0b000000000100,
 							7: 0b000000001000  }
-
-	def __init__(self, args = {}):
-		Game.__init__(self, args, defaultargs)
-
-		if 'inputmask' not in args:  args['inputmask'] = 0b111111111111
-		self.GenerateValidInputs(args['inputmask'])
-
-		# load the libsnes core and feed the emulator a ROM
-		self.emu = snes_core.EmulatedSNES(args['libsnes'])
-		self.emu.load_cartridge_normal(open(args['rom'], 'rb').read())
-
-		# load a starting state if one was provided
-		if 'initstate' in args:
-			self.emu.unserialize(open(args['initstate'],'rb').read())
-
-		# register drawing and input-reading callbacks
-		self.emu.set_video_refresh_cb(self._video_refresh_cb)
-		self.emu.set_input_state_cb(self._input_state_cb)
-		# don't put anything in the work ram and framebuffer until the emulator can
-		self.wram = None
-		self.snesfb = None
 
 	def ValidInputs(self):
 		return self.valid_inputs
@@ -111,6 +112,9 @@ class SuperOpti(Game):
 
 	def Victory(self):
 		if self.wram is None: return False
-		return self.wram[0xF36] > 0 # mario's score
+		if self.wram[0xF36] > 0: # mario's score
+			print self.wram[0xF34:0xF37]
+			return True
+		print False
 
 LoadedGame = SuperOpti

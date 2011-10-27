@@ -27,9 +27,6 @@ defaultargs = {	'seed':   1,
 class Maze(Game):
 	name = 'maze'
 
-	def HumanInputs(self):
-		return self.inputs
-
 	def __init__(self, args = {}):
 		Game.__init__(self, args, defaultargs)
 		if 'seed' in self.args:  random.seed(self.args['seed'])  # God does not play dice
@@ -86,7 +83,7 @@ class Maze(Game):
 		return ret
 
 	def Heuristic(self):
-		return self.w - self.xpos - 1
+		return self.w - self.xpos
 
 	def Input(self, n):
 		# directions
@@ -105,6 +102,9 @@ class Maze(Game):
 		if nx < self.w and self.world[nx][ny] == floor:
 			self.xpos = nx
 			self.ypos = ny
+
+	def HumanInputs(self):
+		return self.inputs
 
 	def ValidInputs(self):
 		return self.inputs.values()

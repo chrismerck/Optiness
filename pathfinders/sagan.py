@@ -12,88 +12,80 @@ from heapq import *
 
 defaultargs = {}
 
-# NOTE: currently this implementation has some bugs,
-# but it will still find a 'good' path.  investigation ongoing.
+class SaganNode:
+	def __init__(self, game, parent=None, input=None):
+		self.state = game.Freeze()
+		self.g = 0
+		self.h = game.Heuristic()
+		self.victory = game.Victory()
+		if parent is not None:  parent.Adopt(self, input)
+		else:  self.parent = None
 
-# for the purposes of minheaping our savestates...
-class StateWrapper:
-	def __init__(self, state, f):
-		self.state = state
-		self.f = f
-	def __eq__(self, other):
-		return self.state == other.state
-	def __le__(self, other):
-		return self.f[self.state] <= other.f[self.state]
+	def Adopt(self, child, input):
+		child.parent = self
+		child.input = input
+		child.g = self.g + 1
+
+	def GetState(self):
+		# this is a function so we can deal with making a disk cache
+		return self.state
+
+	def ReconstructPath(self):
+		if self.parent is None:  return []
+		# "else"
+		p = self.parent.ReconstructPath()
+		p.append(self.input)
+		return p
+
+	def f(self):
+		return self.g + self.h
+
+	def Victory(self):
+		return self.victory
+
+	def __le__(self, other):  return self.f() <= other.f()
+	def __eq__(self, other):  return self.GetState() == other.GetState()
+	def __hash__(self):       return hash(self.GetState())
 
 class Sagan(Brain):
 	name = 'sagan'
-
 	def __init__(self, game, args = {}):
 		Brain.__init__(self, game, args, defaultargs)
 		self.input_log = None
 
+	def Step(self):
+		# singleton-set minheap containing the initial state.
+		openset = [ SaganNode(self.game) ]
+		closedset = set()
+
+		# while lowest rank in OPEN is not the GOAL
+		while not openset[0].Victory():
+			# get the best (lowest f=g+h) of the fringe
+			x = heappop(openset)
+			closedset.add(x)
+			for inp in self.game.ValidInputs():
+				self.game.Thaw(x.GetState())
+				self.game.Input(inp)
+				y = SaganNode(self.game, x, inp)
+
+				if y in closedset:  continue
+				yield self.game.Draw() # only show if we've not seen this state yet
+
+				tentative_better = True
+				if y not in openset:  heappush(openset, y)
+				elif x.g+1 >= y.g:  tentative_better = False
+
+				if tentative_better:  x.Adopt(y, inp)
+
+		self.input_log = openset[0].ReconstructPath()
+		yield self.game.Draw()
+		print 'Sagan: end of A* search.'
+
 	def Victory(self):
 		return self.input_log is not None
 
-	def _ReconstructPath(self, came_from, state):
-		if state not in came_from:
-			return []
-		# "else"
-		curr = came_from[state]
-		p = self._ReconstructPath(came_from, curr[0])
-		p.append(curr[1])
-		return p
-
-	def Step(self):
-		start = self.game.Freeze()
-
-		g = { start: 0 }
-		h = { start: self.game.Heuristic() }
-		f = { start: g[start] + h[start] }
-
-		# singleton-set minheap containing the initial state.
-		# must use StateWrapper so the minheap-related functions work.
-		openset = [ StateWrapper(start, f) ]
-
-		# we should index these with states rather than wrappers
-		# ... and even that isn't sustainable, so we'll have to
-		#     come up with something better later
-		closedset = set()
-		came_from = {}
-
-		while len(openset) > 0: # while not empty
-			x = heappop(openset).state # get the lowest f=g+h of the openset
-			self.game.Thaw(x)
-			if self.game.Victory():
-				self.input_log = self._ReconstructPath(came_from, x)
-				yield self.game.Draw()
-				return
-
-			closedset.add(x)
-			for inp in self.game.ValidInputs():
-				self.game.Thaw(x)
-				self.game.Input(inp)
-				y = self.game.Freeze()
-
-				if y in closedset: continue
-				yield self.game.Draw() # only show if we've not seen this state yet
-
-				tentative_g = g[x] + 1
-				y_wrapped = StateWrapper(y, f)
-				tentative_better = True
-				if y_wrapped not in openset:
-					heappush(openset, y_wrapped)
-				elif tentative_g >= g[y]:
-					tentative_better = False
-
-				if tentative_better:
-					came_from[y] = (x, inp)
-					g[y] = tentative_g
-					h[y] = self.game.Heuristic()
-					f[y] = g[y] + h[y]
-
-
 	def Path(self):
 		return self.input_log
+	
 
 LoadedBrain = Sagan
