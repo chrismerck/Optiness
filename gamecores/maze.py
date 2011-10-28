@@ -86,8 +86,7 @@ class Maze(Game):
 		return self.w - self.xpos
 
 	def Input(self, n):
-		# directions
-		# up, down, left, right = ( (0,-1), (0,1), (-1,0), (1,0) )
+		if n == 0:  return
 
 		nx = self.xpos
 		ny = self.ypos

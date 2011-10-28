@@ -10,7 +10,7 @@ import pygame
 from skeleton_solver import Brain
 
 # storefringe is currently unused
-defaultargs = { 'depthfactor': 1, 'storefringe': 0 }
+defaultargs = { 'depthfactor': 1, 'storefringe': False }
 
 class Inception(Brain):
 	name = 'inception'
@@ -22,6 +22,7 @@ class Inception(Brain):
 		self.maxdepth = self.depthfactor
 		self.input_log = None
 		self.init_state = game.Freeze()
+		self.terminated = False
 
 	def Step(self):
 		print 'DFS with max depth', self.maxdepth
@@ -35,13 +36,20 @@ class Inception(Brain):
 		for i in self.game.ValidInputs():
 			self.game.Thaw(node)
 			self.game.Input(i)
-			if self.game.Victory(): return [i]
+			if self.game.Victory() or self.terminated:
+				return [i]
 			if depth < self.maxdepth:
 				ret = self._DFS(self.game.Freeze(), depth+1)
 				if ret is not None:
 					ret.insert(0, i)
 					return ret
 		return None
+
+	def Event(self, evt):
+		if evt.type == pygame.QUIT:  self.terminated = True
+
+	def Victory(self):
+		return self.input_log is not None
 
 	def Path(self):
 		return self.input_log

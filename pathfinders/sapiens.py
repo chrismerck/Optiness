@@ -9,13 +9,17 @@ import pygame
 
 from skeleton_solver import Brain
 
-defaultargs = { 'joynum': 0 }
+defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
+                'joynum': 0 }
 
 class Sapiens(Brain):
 	name = 'sapiens'
 
 	def __init__(self, game, args = {}):
 		Brain.__init__(self, game, args, defaultargs)
+
+		self.fps = self.args['fps']
+		self.clock = pygame.time.Clock()
 
 		pygame.joystick.init()
 		self.joy = pygame.joystick.Joystick(self.args['joynum'])
@@ -37,6 +41,7 @@ class Sapiens(Brain):
 
 
 	def Step(self):
+		self.clock.tick(self.fps)
 		self.game.Input(self.pad)
 		self.input_log.append(self.pad)
 		return (self.game.Draw(),)
