@@ -70,23 +70,21 @@ class Wario(Brain):
 		if self.new_best is not None:
 			self.game.Thaw(self.current_state)
 			if self._RunString(self.new_best):
-				print self.new_best, 'immagonnaween'
 				self.input_log += self.new_best
 				yield self.game.Draw()
 				return
-			print self.new_best
 
 		# otherwise, find things
 		start_state = self.current_state
 		self.new_best = None
 		for i in self.input_substrings:
-			if self.terminated:  break
+			if self.terminated:  return
 			self.game.Thaw(start_state)
 			self._RunString(i)
 			yield self.game.Draw()
 
 		# see if we're stuck in a local min
-		if self.new_best is None and not self.terminated:
+		if self.new_best is None:
 			print 'Wario: temporarily stuck, depth-limited search to escape...'
 			self.escape_heur = self.current_heur
 			result = self._Escape_DLS()
