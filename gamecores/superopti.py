@@ -10,6 +10,7 @@ from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 defaultargs = {	'libsnes':   'nes.dll',
 				'rom':       'smb.nes',
 				'initstate': 'smb.state',
+				'granularity': 1,
 				'inputmask': 0b000110000001, # very limited for testing purposes
 				'screen':    (256, 224) }
 
@@ -41,6 +42,9 @@ class SuperOpti(Game):
 		# don't put anything in the work ram and framebuffer until the emulator can
 		self.wram = None
 		self.snesfb = None
+
+		# number of frames to let a single input persist
+		self.granularity = self.args['granularity']
 
 	def HumanInputs(self):
 		return { 'hat0_up':    0b000000010000,
@@ -102,8 +106,9 @@ class SuperOpti(Game):
 		return pygame.image.frombuffer(snesfb_to_rgb(*self.snesfb), (w,h), 'RGB')
 
 	def Input(self, pad):
+		# update the internal pad state that will be checked with libsnes' callbacks
 		self.pad = pad
-		self.emu.run()
+		for i in xrange(self.granularity):  self.emu.run()
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
 		if self.wram is None: print 'derp'
 		#print ord(self.wram[0xF36]),
