@@ -10,7 +10,7 @@ from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 defaultargs = {	'libsnes':   'nes.dll',
 				'rom':       'smb.nes',
 				'initstate': 'smb.state',
-				'inputmask': 0b000010000000, # very limited for testing purposes
+				'inputmask': 0b000110000001, # very limited for testing purposes
 				'screen':    (256, 224) }
 
 # input bits, for reference:
@@ -111,9 +111,7 @@ class SuperOpti(Game):
 	# TODO: figure out a nice generic way to map RAM values to this and Victory
 	def Heuristic(self):
 		if self.wram is None:  return 0
-		print ord(self.wram[0x86]),
 		return 100 - ord(self.wram[0x86])
-		return 0
 
 	def Victory(self):
 		return self.wram is not None and ord(self.wram[0x86]) >= 100 # mario's x position
