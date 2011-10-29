@@ -44,6 +44,7 @@ class Sapiens(Brain):
 		self.clock.tick(self.fps)
 		self.game.Input(self.pad)
 		self.input_log.append(self.pad)
+		if self.game.Victory():  print 'Sapiens: you won the game!'
 		return (self.game.Draw(),)
 
 	def Event(self, evt):

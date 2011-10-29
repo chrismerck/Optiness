@@ -11,13 +11,17 @@ defaultargs = {	'libsnes':   'nes.dll',
 				'rom':       'smb.nes',
 				'initstate': 'smb.state',
 				'granularity': 1,
-				'inputmask': 0b000110000001, # very limited for testing purposes
+				'inputmask': 0b000111000001, # very limited for testing purposes
 				'screen':    (256, 224) }
 
 # input bits, for reference:
 # 0000RLXA><v^teYB = 16-bit order
 # in other words, B, Y, Se, St, ^, v, <, >, A, X, L, R = range(12)
 
+# Super Mario Bros. 1 notes:
+# page of the level:         ord(self.wram[0x6D])
+# mario's x in current page: ord(self.wram[0x86])
+# mario's x in level(ish):  (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
 class SuperOpti(Game):
 	name = 'superopti'
 
@@ -82,7 +86,7 @@ class SuperOpti(Game):
 					if val not in self.valid_inputs:
 						self.valid_inputs.append(val)
 		#self.valid_inputs.remove(0)
-		print 'generated', len(self.valid_inputs), 'valid inputs'
+		print 'SuperOpti: generated', len(self.valid_inputs), 'valid inputs'
 
 	def _video_refresh_cb(self, data, width, height, hires, interlace, overscan, pitch):
 		self.snesfb = (data, width, height, pitch)
@@ -110,15 +114,22 @@ class SuperOpti(Game):
 		self.pad = pad
 		for i in xrange(self.granularity):  self.emu.run()
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
-		if self.wram is None: print 'derp'
-		#print ord(self.wram[0xF36]),
+		if self.wram is None: print 'SuperOpti: error retrieving RAM'
+
+	def _MarioPos(self):
+		# is mario dead? (is his graphic table offset the position of the 'dead' tiles)
+		if ord(self.wram[0x06d5]) == 176:  return 0
+		# page*256 + position in page (0..255)
+		return (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
 
 	# TODO: figure out a nice generic way to map RAM values to this and Victory
 	def Heuristic(self):
-		if self.wram is None:  return 0
-		return 100 - ord(self.wram[0x86])
+		if self.wram is None:  return 12<<8
+		# mario's x in level(ish):
+		return (12<<8) - self._MarioPos()
 
 	def Victory(self):
-		return self.wram is not None and ord(self.wram[0x86]) >= 100 # mario's x position
+		# mario's x position at end of 1-1
+		return self.wram is not None and self._MarioPos() >= (12<<8)
 
 LoadedGame = SuperOpti

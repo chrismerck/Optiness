@@ -9,8 +9,8 @@ import pygame
 
 from skeleton_solver import Brain
 
-defaultargs = { 'lookahead':    4,
-				'maxlookahead': 12,
+defaultargs = { 'lookahead':    3,
+				'maxlookahead': 7,
 				'increasetime': 2 }
 
 class Wario(Brain):
@@ -30,6 +30,7 @@ class Wario(Brain):
 		self._GenInputLists(self.lookahead)
 		self.frames_since_increase = 0
 
+		#self.game.Input(0) # hack for emulator to kick into gear
 		self.current_state = self.game.Freeze()
 		self.current_heur = self.game.Heuristic()
 		self.escape_heur = self.current_heur
@@ -71,6 +72,7 @@ class Wario(Brain):
 			self.game.Thaw(self.current_state)
 			if self._RunString(self.new_best):
 				print self.new_best, 'immagonnaween'
+				self.input_log += self.new_best
 				yield self.game.Draw()
 				return
 			print self.new_best
@@ -81,7 +83,12 @@ class Wario(Brain):
 		for i in self.input_substrings:
 			if self.terminated:  break
 			self.game.Thaw(start_state)
-			self._RunString(i)
+			result = self._RunString(i)
+			if result and self.frames_since_increase > 0:
+				print 'Wario: seemingly escaped from local minimum'
+				self._GenInputLists(self.lookahead)
+				self.frames_since_increase = 0
+				break
 			yield self.game.Draw()
 
 		if self.new_best is None:
