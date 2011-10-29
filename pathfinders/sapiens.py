@@ -29,6 +29,7 @@ class Sapiens(Brain):
 		self.input_log = []
 		self.input_map = game.HumanInputs()
 		self.pad = 0
+		self.won = False
 
 		map = self.input_map
 		self.hat_reset = 0
@@ -44,7 +45,9 @@ class Sapiens(Brain):
 		self.clock.tick(self.fps)
 		self.game.Input(self.pad)
 		self.input_log.append(self.pad)
-		if self.game.Victory():  print 'Sapiens: you won the game!'
+		if self.game.Victory() and not self.won:
+			self.won = True
+			print 'Sapiens: you won the game!'
 		return (self.game.Draw(),)
 
 	def Event(self, evt):

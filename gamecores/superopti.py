@@ -11,7 +11,8 @@ defaultargs = {	'libsnes':   'nes.dll',
 				'rom':       'smb.nes',
 				'initstate': 'smb.state',
 				'granularity': 1,
-				'inputmask': 0b000111000001, # very limited for testing purposes
+#                              RLXA><v^teYB
+				'inputmask': 0b000110000001, # very limited for testing purposes
 				'screen':    (256, 224) }
 
 # input bits, for reference:
@@ -115,21 +116,28 @@ class SuperOpti(Game):
 		for i in xrange(self.granularity):  self.emu.run()
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
 		if self.wram is None: print 'SuperOpti: error retrieving RAM'
+		#if ord(self.wram[0x10d]) != 0:
+		#	print ord(self.wram[0x10d]), (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
 
 	def _MarioPos(self):
 		# is mario dead? (is his graphic table offset the position of the 'dead' tiles)
-		if ord(self.wram[0x06d5]) == 176:  return 0
+		if ord(self.wram[0x6d5]) == 176:  return 0
+		# did mario fall down a pit?
+		if (ord(self.wram[0xb5]) << 8) + ord(self.wram[0xce]) > 440:  return 0
+		# if we reach the flagpole?
+		flag = ord(self.wram[0x10d])
+		if 0 < flag < 176:  return 13<<8
 		# page*256 + position in page (0..255)
 		return (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
 
 	# TODO: figure out a nice generic way to map RAM values to this and Victory
 	def Heuristic(self):
-		if self.wram is None:  return 12<<8
+		if self.wram is None:  return 13<<8
 		# mario's x in level(ish):
-		return (12<<8) - self._MarioPos()
+		return (13<<8) - self._MarioPos()
 
 	def Victory(self):
 		# mario's x position at end of 1-1
-		return self.wram is not None and self._MarioPos() >= (12<<8)
+		return self.wram is not None and self._MarioPos() >= (13<<8)
 
 LoadedGame = SuperOpti

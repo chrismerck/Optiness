@@ -95,7 +95,11 @@ class Wario(Brain):
 			else:
 				print 'Wario: found an escape.'
 				self.game.Thaw(start_state)
-				self._RunString(result)
+				for j in result:  self.game.Input(j)
+				self.new_best = result
+				self.current_heur = self.game.Heuristic()
+				self.current_state = self.game.Freeze()
+				yield self.game.Draw()
 
 		self.input_log += self.new_best
 

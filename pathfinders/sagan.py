@@ -10,22 +10,21 @@ import pygame
 from skeleton_solver import Brain
 from heapq import *
 
-defaultargs = {}
-EDGE = 3
+defaultargs = { 'edgecost': 1 }
 
 class SaganNode:
-	def __init__(self, game, parent=None, input=None):
+	def __init__(self, game, edge, parent=None, input=None):
 		self.state = game.Freeze()
 		self.g = 0
 		self.h = game.Heuristic()
 		self.victory = game.Victory()
-		if parent is not None:  parent.Adopt(self, input)
+		if parent is not None:  parent.Adopt(self, input, edge)
 		else:  self.parent = None
 
-	def Adopt(self, child, input):
+	def Adopt(self, child, input, edge):
 		child.parent = self
 		child.input = input
-		child.g = self.g + EDGE
+		child.g = self.g + edge
 
 	def GetState(self):
 		# this is a function so we can deal with making a disk cache
@@ -52,12 +51,13 @@ class Sagan(Brain):
 	name = 'sagan'
 	def __init__(self, game, args = {}):
 		Brain.__init__(self, game, args, defaultargs)
+		self.edge = self.args['edgecost']
 		self.input_log = None
 		self.terminated = False
 
 	def Step(self):
 		# singleton-set minheap containing the initial state.
-		openset = [ SaganNode(self.game) ]
+		openset = [ SaganNode(self.game, self.edge) ]
 		closedset = set()
 
 		# while lowest rank in OPEN is not the GOAL
@@ -68,16 +68,16 @@ class Sagan(Brain):
 			for inp in self.game.ValidInputs():
 				self.game.Thaw(x.GetState())
 				self.game.Input(inp)
-				y = SaganNode(self.game, x, inp)
+				y = SaganNode(self.game, self.edge, x, inp)
 
 				if y in closedset:  continue
 				yield self.game.Draw() # only show if we've not seen this state yet
 
 				tentative_better = True
 				if y not in openset:  heappush(openset, y)
-				elif x.g+EDGE >= y.g:  tentative_better = False
+				elif x.g + self.edge >= y.g:  tentative_better = False
 
-				if tentative_better:  x.Adopt(y, inp)
+				if tentative_better:  x.Adopt(y, inp, self.edge)
 
 		self.input_log = openset[0].ReconstructPath()
 		yield self.game.Draw()
