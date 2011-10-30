@@ -142,6 +142,6 @@ class SuperOpti(Game):
 
 	def Victory(self):
 		# mario's x position at end of 1-1
-		return self.wram is not None and self._MarioPos() >= 4830 # SMB : (13<<8)
+		return self.wram is not None and self._MarioPos_SMW() >= 4830 # SMB : (13<<8)
 
 LoadedGame = SuperOpti
