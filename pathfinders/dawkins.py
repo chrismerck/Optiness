@@ -12,7 +12,12 @@ import random
 
 from skeleton_solver import Brain
 
-defaultargs = { 'popsize': 30, 'dnalen': 300 }
+defaultargs = { 'popsize':             30,
+				'dnalen':             300,
+				'mutate_strength':      1,
+				'avg_point_mutations':  1,
+				'avg_swaps':           10,
+				'avg_deletions':        3  }
 
 class Indiv:
 	def __init__(self, game, dnalen):
@@ -40,10 +45,7 @@ class Indiv:
 		self.dna = other.dna[:]
 		self.fitness = other.fitness
 
-	def Mutate(self,strength):
-		avg_point_mutations = 1
-		avg_swaps = 10
-		avg_deletions = 3
+	def Mutate(self, strength, avg_point_mutations, avg_swaps, avg_deletions):
 		dnalen = self.dnalen
 
 		# perform point mutations
@@ -83,8 +85,13 @@ class Dawkins(Brain):
 		# populate
 		dnalen = self.args['dnalen']
 		popsize = self.args['popsize']
-		self.pop = [Indiv(game, dnalen) for i in xrange(popsize)]
 
+		self.mutate_strength = self.args['mutate_strength']
+		self.avg_point_mutations = self.args['avg_point_mutations']
+		self.avg_swaps = self.args['avg_swaps']
+		self.avg_deletions = self.args['avg_deletions']
+
+		self.pop = [Indiv(game, dnalen) for i in xrange(popsize)]
 		self.input_string = (float("inf"), []) # pair of (heur, path)
 
 	# we deviate a bit from the biblical record here
@@ -97,6 +104,7 @@ class Dawkins(Brain):
 				if win_steps < self.input_string[0]:
 					self.input_string = (win_steps, i.dna)
 			print i.fitness,
+			yield self.game.Draw()
 		print ")"
 
 		self.pop.sort() # sort by fitness
@@ -107,10 +115,14 @@ class Dawkins(Brain):
 			self.pop[j].Copy(self.pop[i])
 
 		self.pop[0].Run()
-		yield self.game.Draw()
 
 		for i in self.pop:
-			i.Mutate(1)
+			i.Mutate( self.mutate_strength,
+					  self.avg_point_mutations,
+					  self.avg_swaps,
+					  self.avg_deletions )
+
+		yield self.game.Draw()
 
 	def Path(self):
 		return self.input_string[1]
