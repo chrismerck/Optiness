@@ -9,8 +9,8 @@ import pygame
 
 from skeleton_solver import Brain
 
-defaultargs = { 'lookahead':    3,
-				'escapedepth':  5 }
+defaultargs = { 'lookahead':    2,
+				'escapedepth':  6 }
 
 class Wario(Brain):
 	name = 'wario'

@@ -24,7 +24,7 @@ class Sapiens(Brain):
 		pygame.joystick.init()
 		self.joy = pygame.joystick.Joystick(self.args['joynum'])
 		self.joy.init()
-		print self.joy.get_name()
+		print 'Sapiens:', self.joy.get_name()
 
 		self.input_log = []
 		self.input_map = game.HumanInputs()

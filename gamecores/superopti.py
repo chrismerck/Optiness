@@ -7,12 +7,13 @@ from skeleton_game import Game
 from snes import core as snes_core
 from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 
-defaultargs = {	'libsnes':   'snes.dll',
+defaultargs = {	'libsnes':   'snes9x.dll',
 				'rom':       'smw.sfc',
-				'initstate': 'smw.state',
-				'granularity': 1,
+				'initstate': 'smw.state9x',
+				'heuristic': 'smw',
+				'granularity': 6,
 #                              RLXA><v^teYB
-				'inputmask': 0b000010000011, # very limited for testing purposes
+				'inputmask': 0b000111000011, # very limited for testing purposes
 				'screen':    (256, 224) }
 
 # input bits, for reference:
@@ -47,6 +48,12 @@ class SuperOpti(Game):
 		# don't put anything in the work ram and framebuffer until the emulator can
 		self.wram = None
 		self.snesfb = None
+
+		self._Heuristic = None
+		try:
+			self._Heuristic = __import__(self.args['heuristic']).Heuristic
+		except:
+			print 'SuperOpti: could not load given heuristic, falling back to blind'
 
 		# number of frames to let a single input persist
 		self.granularity = self.args['granularity']
@@ -116,32 +123,20 @@ class SuperOpti(Game):
 		for i in xrange(self.granularity):  self.emu.run()
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
 		if self.wram is None: print 'SuperOpti: error retrieving RAM'
-		#if ord(self.wram[0x10d]) != 0:
-		#	print ord(self.wram[0x10d]), (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
 
-	def _MarioPos(self):
-		# is mario dead? (is his graphic table offset the position of the 'dead' tiles)
-		if ord(self.wram[0x6d5]) == 176:  return 0
-		# did mario fall down a pit?
-		if (ord(self.wram[0xb5]) << 8) + ord(self.wram[0xce]) > 440:  return 0
-		# if we reach the flagpole?
-		flag = ord(self.wram[0x10d])
-		if 0 < flag < 176:  return 13<<8
-		# page*256 + position in page (0..255)
-		return (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
+	def _Byte(self, ofs):
+		if self.wram is None:  return 0
+		return ord(self.wram[ofs])
 
-	def _MarioPos_SMW(self):
-		if ord(self.wram[0x0071]) == 9:  return 0 # dead
-		return (ord(self.wram[0xD2]) << 8) + ord(self.wram[0xD1])
+	def _Word(self, ofshi, ofslo):
+		return (self._Byte(ofshi) << 8) + self._Byte(ofslo)
 
-	# TODO: figure out a nice generic way to map RAM values to this and Victory
 	def Heuristic(self):
-		if self.wram is None:  return 4830 # SMB : 13<<8
-		# mario's x in level(ish):
-		return 4830 - self._MarioPos_SMW()
+		if self.wram is None:  return float('inf')
+		if self._Heuristic is not None:  return self._Heuristic(self)
+		return 1
 
 	def Victory(self):
-		# mario's x position at end of 1-1
-		return self.wram is not None and self._MarioPos_SMW() >= 4830 # SMB : (13<<8)
+		return self.Heuristic() <= 0
 
 LoadedGame = SuperOpti
