@@ -7,12 +7,12 @@ from skeleton_game import Game
 from snes import core as snes_core
 from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 
-defaultargs = {	'libsnes':   'nes.dll',
-				'rom':       'smb.nes',
-				'initstate': 'smb.state',
+defaultargs = {	'libsnes':   'snes.dll',
+				'rom':       'smw.sfc',
+				'initstate': 'smw.state',
 				'granularity': 1,
 #                              RLXA><v^teYB
-				'inputmask': 0b000110000001, # very limited for testing purposes
+				'inputmask': 0b000010000011, # very limited for testing purposes
 				'screen':    (256, 224) }
 
 # input bits, for reference:
@@ -130,14 +130,18 @@ class SuperOpti(Game):
 		# page*256 + position in page (0..255)
 		return (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
 
+	def _MarioPos_SMW(self):
+		if ord(self.wram[0x0071]) == 9:  return 0 # dead
+		return (ord(self.wram[0xD2]) << 8) + ord(self.wram[0xD1])
+
 	# TODO: figure out a nice generic way to map RAM values to this and Victory
 	def Heuristic(self):
-		if self.wram is None:  return 13<<8
+		if self.wram is None:  return 4830 # SMB : 13<<8
 		# mario's x in level(ish):
-		return (13<<8) - self._MarioPos()
+		return 4830 - self._MarioPos_SMW()
 
 	def Victory(self):
 		# mario's x position at end of 1-1
-		return self.wram is not None and self._MarioPos() >= (13<<8)
+		return self.wram is not None and self._MarioPos() >= 4830 # SMB : (13<<8)
 
 LoadedGame = SuperOpti
