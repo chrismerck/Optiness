@@ -11,7 +11,7 @@ defaultargs = {	'libsnes':   'snes9x.dll',
 				'rom':       'smw.sfc',
 				'initstate': 'smw.state9x',
 				'heuristic': 'smw',
-				'granularity': 6,
+				'granularity': 1,
 #                              RLXA><v^teYB
 				'inputmask': 0b000111000011, # very limited for testing purposes
 				'screen':    (256, 224) }
@@ -20,10 +20,6 @@ defaultargs = {	'libsnes':   'snes9x.dll',
 # 0000RLXA><v^teYB = 16-bit order
 # in other words, B, Y, Se, St, ^, v, <, >, A, X, L, R = range(12)
 
-# Super Mario Bros. 1 notes:
-# page of the level:         ord(self.wram[0x6D])
-# mario's x in current page: ord(self.wram[0x86])
-# mario's x in level(ish):  (ord(self.wram[0x6D]) << 8) + ord(self.wram[0x86])
 class SuperOpti(Game):
 	name = 'superopti'
 
@@ -93,7 +89,7 @@ class SuperOpti(Game):
 					val = val & mask
 					if val not in self.valid_inputs:
 						self.valid_inputs.append(val)
-		#self.valid_inputs.remove(0)
+
 		print 'SuperOpti: generated', len(self.valid_inputs), 'valid inputs'
 
 	def _video_refresh_cb(self, data, width, height, hires, interlace, overscan, pitch):
@@ -129,7 +125,7 @@ class SuperOpti(Game):
 		return ord(self.wram[ofs])
 
 	def _Word(self, ofshi, ofslo):
-		return (self._Byte(ofshi) << 8) + self._Byte(ofslo)
+		return (self._Byte(ofshi) << 8) | self._Byte(ofslo)
 
 	def Heuristic(self):
 		if self.wram is None:  return float('inf')

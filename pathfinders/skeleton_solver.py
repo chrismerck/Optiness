@@ -42,7 +42,7 @@ class Brain:
 	def Event(self, evt):
 		pass
 
-	# return the screen (width, height, scale) that should be used
+	# return the screen (width, height) that should be used
 	def ScreenSize(self):
 		return self.game.ScreenSize()
 

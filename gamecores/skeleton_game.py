@@ -61,7 +61,7 @@ class Game:
 	def HumanInputs(self):
 		return { 0: 0 }
 
-	# return the screen (width, height, scale) that should be used
+	# return the screen (width, height) that should be used
 	def ScreenSize(self):
 		if 'screen' in self.args:  return self.args['screen']
 		return (xmax, ymax)

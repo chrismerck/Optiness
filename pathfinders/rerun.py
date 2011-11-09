@@ -43,7 +43,7 @@ class Rerun(Brain):
 		print 'with', len(self.inputstring), 'frames of input'
 
 	def Step(self):
-		self.clock.tick(self.fps)
+		if self.fps > 0:  self.clock.tick(self.fps)
 		frameinput = 0
 		if len(self.inputstring): frameinput = self.inputstring.pop(0)
 		for i in xrange(self.granularity):

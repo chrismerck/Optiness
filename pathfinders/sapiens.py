@@ -45,6 +45,7 @@ class Sapiens(Brain):
 		self.clock.tick(self.fps)
 		self.game.Input(self.pad)
 		self.input_log.append(self.pad)
+		pygame.display.set_caption('{}'.format(self.game.Heuristic()))
 		if self.game.Victory() and not self.won:
 			self.won = True
 			print 'Sapiens: you won the game!'

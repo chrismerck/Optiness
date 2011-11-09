@@ -15,20 +15,26 @@ import getopt   # argument parsing
 sys.path.append('./gamecores')
 sys.path.append('./pathfinders')
 
+def usage():
+	print 'todo: help'
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hg:b:s:", ["help", "game=", "brain=", "scale="])
+		opts, args = getopt.getopt(sys.argv[1:], "hg:b:s:o:", ["help", "game=", "brain=", "scale=", "output="])
 	except getopt.GetoptError, err:
 		print str(err)
-		#usage()
+		usage()
 		sys.exit(2)
+
+	game_mod_name, brain_mod_name = ('maze', 'sagan')
+	game_args, brain_args = ({}, {})
 
 	# we may want to make the display output bigger
 	scale = 1
 
-	game_mod_name, brain_mod_name = ('maze', 'sagan')
-	game_args, brain_args = ({}, {})
+	# default value for the output pickle
+	output = 'inputstring.pickle'
+
 	for o,a in opts:
 		if o in ('-h', '--help'):
 			usage()
@@ -46,6 +52,8 @@ def main():
 				brain_args[key] = val
 		elif o in ('-s', '--scale'):
 			scale = int(a)
+		elif o in ('-o', '--output'):
+			output = a
 
 	game_mod = __import__(game_mod_name)
 	game = game_mod.LoadedGame(game_args)
@@ -87,7 +95,7 @@ def main():
 		'path': brain.Path(),
 		'state': game.Freeze()
 	}
-	cPickle.dump( result, open('inputstring.pickle', 'w') )
+	cPickle.dump( result, open(output, 'w'), protocol=2 )
 	pygame.image.save(screen, 'endgame.png')
 
 if __name__ == "__main__":  main()
