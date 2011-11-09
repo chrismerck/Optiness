@@ -119,7 +119,9 @@ class Wario(Brain):
 				self.new_best = result
 				self.current_heur = self.game.Heuristic()
 				self.current_state = self.game.Freeze()
-				yield self._UpdateScreen()
+				self.input_log += result
+				yield self._UpdateScreen(right=False)
+				return
 
 		# only take 'walkahead' steps just in case we run into the DANGER ZONE
 		self.game.Thaw(start_state)
