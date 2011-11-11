@@ -7,6 +7,8 @@ from skeleton_game import Game
 from snes import core as snes_core
 from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 
+from array import array
+
 defaultargs = {	'libsnes':   'snes9x.dll',
 				'rom':       'smw.sfc',
 				'initstate': 'smw.state9x',
@@ -44,6 +46,7 @@ class SuperOpti(Game):
 		# don't put anything in the work ram and framebuffer until the emulator can
 		self.wram = None
 		self.snesfb = None
+		self.soundbuf = array('H', [0,0])
 
 		self._Heuristic = None
 		try:
@@ -99,6 +102,9 @@ class SuperOpti(Game):
 		if port or not(0 <= id < 12): return False # player2 or undefined button
 		return bool(self.pad & (1 << id))
 
+	def _audio_sample_cb(self, left, right):
+		self.soundbuf = (left, right)
+
 	def Freeze(self):
 		return self.emu.serialize()
 
@@ -134,5 +140,8 @@ class SuperOpti(Game):
 
 	def Victory(self):
 		return self.Heuristic() <= 0
+
+	def Sound(self):
+		return self.soundbuf
 
 LoadedGame = SuperOpti

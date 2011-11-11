@@ -7,6 +7,7 @@ Darren Alton
 
 import pygame
 from cPickle import dumps, loads
+from array import array
 
 xmax = 320 # fallback width of the screen
 ymax = 200 # fallback height of the screen
@@ -65,5 +66,9 @@ class Game:
 	def ScreenSize(self):
 		if 'screen' in self.args:  return self.args['screen']
 		return (xmax, ymax)
+
+	# return left and right channel, 16-bit sound
+	def Sound(self):
+		return (0,0)
 
 LoadedGame = Game

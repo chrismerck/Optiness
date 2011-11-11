@@ -6,6 +6,7 @@ By Darren Alton
 """
 
 def Heuristic(self):
+	dead = float('inf')
 	level_end = 13*256
 	level_ground_ypos = 440
 	mario_dead_anim = 176
@@ -19,7 +20,7 @@ def Heuristic(self):
 	# is mario dead? (is his graphic table offset the position of the 'dead' tiles)
 	# or did mario fall down a pit? (is his y position lower than the ground)
 	if mario_anim == mario_dead_anim or mario_y > level_ground_ypos:
-		return level_end
+		return dead
 
 	# did we reach the flagpole?
 	if 0 < flag_ypos < flag_top_ypos:  return 0

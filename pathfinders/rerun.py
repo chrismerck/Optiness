@@ -6,6 +6,8 @@ Darren Alton
 """
 
 import pygame, cPickle
+import wave
+from array import array
 
 from skeleton_solver import Brain
 
@@ -13,7 +15,8 @@ defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
 				'file': 'inputstring.pickle',
 				'granularity': 1, # mostly for converting SuperOpti runs to 60fps
 				'force': False,
-				'record': False }
+				'record': False,
+				'wavfile': None }
 
 class Rerun(Brain):
 	name = 'rerun'
@@ -26,6 +29,12 @@ class Rerun(Brain):
 		self.force = self.args['force']
 		self.granularity = self.args['granularity']
 		self.record = self.args['record']
+		self.wavfile = self.args['wavfile']
+		if self.wavfile is not None:
+			self.wavfile = wave.open(self.wavfile, 'wb')
+			self.wavfile.setnchannels(2)
+			self.wavfile.setsampwidth(2)
+			self.wavfile.setframerate(32000)
 
 		loadedfile = cPickle.load(open(self.args['file'], 'r'))
 
@@ -45,7 +54,10 @@ class Rerun(Brain):
 	def Step(self):
 		if self.fps > 0:  self.clock.tick(self.fps)
 		frameinput = 0
-		if len(self.inputstring): frameinput = self.inputstring.pop(0)
+
+		if len(self.inputstring):  frameinput = self.inputstring.pop(0)
+		elif self.wavfile is not None:  self.wavfile.close()
+
 		for i in xrange(self.granularity):
 			self.game.Input(frameinput)
 			self.outputstring.append(frameinput)
@@ -55,6 +67,8 @@ class Rerun(Brain):
 								   '%s_%s_%04d.png' % ( self.__class__.name,
 														self.game.__class__.name,
 														len(self.outputstring) ) )
+			if self.wavfile is not None:
+				self.wavfile.writeframes(array('H', self.game.Sound()).tostring())
 			yield surf
 
 	def Path(self):
