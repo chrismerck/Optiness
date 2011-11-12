@@ -42,11 +42,12 @@ class SuperOpti(Game):
 
 		# register drawing and input-reading callbacks
 		self.emu.set_video_refresh_cb(self._video_refresh_cb)
+		self.emu.set_audio_sample_cb(self._audio_sample_cb)
 		self.emu.set_input_state_cb(self._input_state_cb)
 		# don't put anything in the work ram and framebuffer until the emulator can
 		self.wram = None
 		self.snesfb = None
-		self.soundbuf = array('H', [0,0])
+		self.soundbuf = array('H', [])
 
 		self._Heuristic = None
 		try:
@@ -103,7 +104,7 @@ class SuperOpti(Game):
 		return bool(self.pad & (1 << id))
 
 	def _audio_sample_cb(self, left, right):
-		self.soundbuf = (left, right)
+		self.soundbuf += array('H', (left,right))
 
 	def Freeze(self):
 		return self.emu.serialize()
@@ -142,6 +143,8 @@ class SuperOpti(Game):
 		return self.Heuristic() <= 0
 
 	def Sound(self):
-		return self.soundbuf
+		tmp = self.soundbuf
+		self.soundbuf = array('H', [])
+		return tmp
 
 LoadedGame = SuperOpti
