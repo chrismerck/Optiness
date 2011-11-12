@@ -4,7 +4,7 @@ from struct import unpack, Struct
 # only supports reading at the moment.
 # will probably undergo some heavy changes later to become a file-like object.
 class BSVFile:
-	def __init__(self, path):
+	def __init__(self, path, verbose=False):
 		buf = open(path, 'rb').read()
 
 		magic = buf[3::-1]  # curse you endianness!
@@ -22,11 +22,12 @@ class BSVFile:
 		# 16 bits per controller per frame.
 		self.frames = len(self.ctrlbuf) / (2*self.players)
 
-		print magic, 'file loaded:'
-		print '  serializerVersion =', serializerVersion
-		print '  cartCRC           =', cartCRC
-		print '  stateSize         =', stateSize
-		print 'with', self.players, 'controllers and', self.frames, 'frames'
+		if verbose:
+			print magic, 'file loaded:'
+			print '  serializerVersion =', serializerVersion
+			print '  cartCRC           =', cartCRC
+			print '  stateSize         =', stateSize
+			print 'with', self.players, 'controllers and', self.frames, 'frames'
 
 		self.ctrlstruct = Struct('<' + ('H' * self.players))
 		self.ctrlindex = 0
