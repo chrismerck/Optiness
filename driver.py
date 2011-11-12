@@ -81,7 +81,7 @@ def main():
 				# scale it, and show it
 				scaled = surf
 				if scale != 1: scaled = pygame.transform.scale(surf, (xmax,ymax))
-				screen.blit(scaled, scaled.get_rect())
+				screen.blit(scaled, (0,0))
 			pygame.display.flip()
 		pygame.display.flip()
 
@@ -95,7 +95,7 @@ def main():
 		'path': brain.Path(),
 		'state': game.Freeze()
 	}
-	cPickle.dump( result, open(output, 'w'), protocol=2 )
+	cPickle.dump( result, open(output, 'w') )
 	pygame.image.save(screen, 'endgame.png')
 
 if __name__ == "__main__":  main()

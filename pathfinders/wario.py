@@ -9,10 +9,8 @@ import pygame
 
 from skeleton_solver import Brain
 
-defaultargs = { 'lookahead':      2,
-				'walkahead':      1,
-				'escapedepth':    3,
-				'shortcutrepeat': False }
+defaultargs = { 'lookahead': 2,
+				'walkahead': 1 }
 
 class Wario(Brain):
 	name = 'wario'
@@ -22,120 +20,96 @@ class Wario(Brain):
 
 		self.lookahead = self.args['lookahead']
 		self.walkahead = self.args['walkahead']
-		self.escapedepth = self.args['escapedepth']
-		self.shortcutrepeat = self.args['shortcutrepeat']
 
 		self.input_log = []
-		self.new_best = None
 		self.terminated = False
 
-		self._GenInputLists(self.lookahead)
-
-		self.current_state = self.game.Freeze()
-		self.current_heur = self.game.Heuristic()
-		self.escape_heur = self.current_heur
+		self.best_state = self.game.Freeze()
+		self.best_heur = self.game.Heuristic()
 
 		self.screen = pygame.Surface(self.ScreenSize())
 		self.screenmidpoint = self.screen.get_width() / 2
 
+	def _UpdateScreen(self, surf=None, right=True):
+		if surf is None:  surf = self.game.Draw()
 
-	def _GenInputLists(self, max, path = []):
-		if len(path) == 0:
-			self.input_substrings = []
-		else:
-			self.input_substrings.append(path)
-		if len(path) < max:
-			for i in self.game.ValidInputs():
-				self._GenInputLists(max, path + [i])
-
-	def _UpdateScreen(self, right=True):
 		x = 0
 		if right: x = self.screenmidpoint
-		self.screen.blit(self.game.Draw(), (x,0))
+
+		self.screen.blit(surf, (x,0))
 		return self.screen
-
-	def _UpdateCurrentBest(self, instring):
-		self.new_best = instring
-		self.current_heur = self.game.Heuristic()
-		self.current_state = self.game.Freeze()
-		self._UpdateScreen(right=False)
-
-	def _Escape_DLS(self, depth = 0):
-		if depth < self.escapedepth:
-			state = self.game.Freeze()
-			for i in self.input_substrings:
-				self._RunString(i, state)
-
-				self.driverscreen.blit(self._UpdateScreen(), (0,0))
-				pygame.display.flip()
-
-				h = self.game.Heuristic()
-				pygame.display.set_caption('{} vs. {} (escape)'.format(self.escape_heur, h))
-
-				if h < self.escape_heur:  return i
-				elif h == float('inf'):   return None  # 'dead'
-
-				result = self._Escape_DLS(depth+1)
-				if result is not None:
-					return i + result
-		return None
 
 	def _RunString(self, instring, state=None):
 		if state is not None:  self.game.Thaw(state)
-		for j in instring:  self.game.Input(j)
+		for j in instring:
+			self.game.Input(j)
 
-	def _TryString(self, instring, state=None):
-		self._RunString(instring, state)
-		h = self.game.Heuristic()
-		pygame.display.set_caption('{} vs. {}'.format(self.current_heur, h))
-		if h < self.current_heur:
-			self._UpdateCurrentBest(instring)
-			return True
-		return False
+	def _LookAhead(self, start_state, maxdepth):
+		min_heur = self.game.Heuristic()
+		if maxdepth <= 0:  return min_heur
+
+		fringe = [(0,[])]
+		while len(fringe) and not self.terminated:
+			depth,instring = fringe.pop()
+			self._RunString(instring, start_state)
+
+			# if dead, it's unlikely any children will be improved
+			if self.game.Defeat():
+				continue
+
+			# if we found a new best heuristic, update it
+			min_heur = min( min_heur, self.game.Heuristic() )
+
+			# add new children to explore if we haven't hit our limit
+			if depth < maxdepth:
+				for child in self.game.ValidInputs():
+					fringe.append( ( depth+1, instring+[child] ) )
+
+		self.game.Thaw(start_state)
+		return min_heur
 
 	def Step(self):
-		start_state = self.current_state
+		start_state = self.best_state
+		best_instring = []
+		maxdepth = self.walkahead
+		peek = self.lookahead - self.walkahead
 
-		# see if rerunning the last sequence will work again
-		if self.shortcutrepeat and self.new_best is not None:
-			if self._TryString(self.new_best, start_state):
-				# hack to backpedal an 'appropriate' amount
-				tmp = self.new_best[:self.walkahead]
-				self._RunString(tmp, start_state)
-				self.input_log += tmp
-				yield self._UpdateScreen()
-				return
+		fringe = [(0,[])]
+		while len(fringe) and not self.terminated:
+			depth,instring = fringe.pop()
+			self._RunString(instring, start_state)
+			img = self.game.Draw()
 
-		# otherwise, find things
-		self.new_best = None
-		for i in self.input_substrings:
-			if self.terminated:  return
-			self._TryString(i, start_state)
-			yield self._UpdateScreen()
+			# prune, don't bother exploring nodes at or past a death
+			if depth > 0 and self.game.Defeat():
+				continue
 
-		# see if we're stuck in a local min
-		if self.new_best is None:
-			print 'Wario: temporarily stuck, depth-limited search to escape...'
-			self.escape_heur = self.current_heur
-			self.driverscreen = pygame.display.get_surface()
-			result = self._Escape_DLS()
-			if result is None:
-				print 'Wario: stuck in a local minimum or unable to see any progress.'
-				self.terminated = True
-				self.new_best = []
-			else:
-				print 'Wario: found an escape.'
-				self._RunString(result, start_state)
-				self._UpdateCurrentBest(result)
-				self.input_log += result
-				yield self._UpdateScreen(right=False)
-				return
+			# find out if the node we're exploring is promising
+			current = self.game.Freeze()
+			h = self._LookAhead(current, peek)
 
-		# only take 'walkahead' steps just in case we run into the DANGER ZONE
-		tmp = self.new_best[:self.walkahead]
-		self._RunString(tmp, start_state)
-		self.input_log += tmp
-		self.current_state = self.game.Freeze()
+			# give some insight to the user
+			s = '{} vs. {}'.format(self.best_heur, h)
+			pygame.display.set_caption(s)
+			yield self._UpdateScreen(surf=img)
+
+			# if it's a new best, update things to reflect that
+			if h < self.best_heur:
+				self.best_heur = h
+				self.best_state = current
+				best_instring = instring
+				self._UpdateScreen(surf=img, right=False)
+
+			# add new children to explore if we haven't hit our limit
+			if depth < maxdepth:
+				for child in self.game.ValidInputs():
+					fringe.append( ( depth+1, instring+[child] ) )
+
+		if len(best_instring):
+			self.input_log += best_instring
+		elif not self.terminated:
+			print 'got stuck.'
+			self.terminated = True
 
 	def Event(self, evt):
 		if evt.type == pygame.QUIT:  self.terminated = True

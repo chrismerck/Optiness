@@ -13,6 +13,7 @@ defaultargs = {	'libsnes':   'snes9x.dll',
 				'rom':       'smw.sfc',
 				'initstate': 'smw.state9x',
 				'heuristic': 'smw',
+				'audio':     False,
 				'granularity': 1,
 #                              RLXA><v^teYB
 				'inputmask': 0b000111000011, # very limited for testing purposes
@@ -42,8 +43,11 @@ class SuperOpti(Game):
 
 		# register drawing and input-reading callbacks
 		self.emu.set_video_refresh_cb(self._video_refresh_cb)
-		self.emu.set_audio_sample_cb(self._audio_sample_cb)
 		self.emu.set_input_state_cb(self._input_state_cb)
+
+		# only bother with the overhead of audio if it's requested
+		if self.args['audio']:  self.emu.set_audio_sample_cb(self._audio_sample_cb)
+
 		# don't put anything in the work ram and framebuffer until the emulator can
 		self.wram = None
 		self.snesfb = None

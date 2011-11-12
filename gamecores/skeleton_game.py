@@ -36,7 +36,11 @@ class Game:
 
 	# return true if the game has reached a goal state
 	def Victory(self):
-		return True
+		return self.Heuristic() <= 0
+
+	# return true if the game has reached a 'dead' state
+	def Defeat(self):
+		return self.Heuristic() == float('inf')
 
 	# under-or-equal-estimate of input-frames to goal
 	def Heuristic(self):
