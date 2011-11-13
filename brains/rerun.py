@@ -12,11 +12,11 @@ from array import array
 from skeleton_solver import Brain
 
 defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
-				'file': 'inputstring.pickle',
+				'file': 'output/last_run.pickle',
 				'granularity': 1, # mostly for converting SuperOpti runs to 60fps
 				'force': False,
-				'record': False,
-				'wavfile': None }
+				'recordvideo': False,
+				'recordaudio': False }
 
 class Rerun(Brain):
 	name = 'rerun'
@@ -28,11 +28,17 @@ class Rerun(Brain):
 		self.fps = self.args['fps']
 		self.force = self.args['force']
 		self.granularity = self.args['granularity']
-		self.record = self.args['record']
-		self.wavfile = self.args['wavfile']
-		self.wavlog = []
+		self.recordvideo = self.args['recordvideo']
+		self.recordaudio = self.args['recordaudio']
 
 		loadedfile = cPickle.load(open(self.args['file'], 'r'))
+
+		if self.recordaudio:
+			# todo: some way to determine appropriate framerate from game.  currently using values for snes
+			self.wav = wave.open('{}_{}.wav'.format(self.__class__.name, self.game.__class__.name), 'wb')
+			self.wav.setnchannels(2)
+			self.wav.setsampwidth(2)
+			self.wav.setframerate(32000)
 
 		# describe the run
 		print 'replaying a run of:\t', loadedfile['game'], '\t', loadedfile['game_args']
@@ -57,23 +63,19 @@ class Rerun(Brain):
 			self.game.Input(frameinput)
 			self.outputstring.append(frameinput)
 			surf = self.game.Draw()
-			if self.record:
+
+			if self.recordvideo:
 				pygame.image.save( surf,
 								   '%s_%s_%04d.png' % ( self.__class__.name,
 														self.game.__class__.name,
 														len(self.outputstring) ) )
-			if self.wavfile is not None:
-				self.wavlog += self.game.Sound()
-				if self.Victory():
-					wav = wave.open(self.wavfile, 'wb')
-					wav.setnchannels(2)
-					wav.setsampwidth(2)
-					wav.setframerate(32000)
-					wav.writeframes(array('H', self.wavlog).tostring())
-					wav.close()
-					self.wavfile = None
+			if self.recordaudio:
+				self.wav.writeframes(array('H', self.game.Sound()).tostring())
+				if self.Victory() and i == self.granularity-1:
+					self.wav.close()
 
 			yield surf
+
 
 	def Path(self):
 		return self.outputstring

@@ -9,8 +9,8 @@ import pygame
 
 from skeleton_solver import Brain
 
-defaultargs = { 'lookahead': 2,
-				'walkahead': 1 }
+defaultargs = { 'lookahead': 3,
+				'walkahead': 2 }
 
 class Wario(Brain):
 	name = 'wario'

@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import pygame
+import sys
 
 from skeleton_game import Game
 
@@ -10,8 +11,8 @@ from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 from array import array
 
 defaultargs = {	'libsnes':   'snes9x.dll',
-				'rom':       'smw.sfc',
-				'initstate': 'smw.state9x',
+				'rom':       'data/smw.sfc',
+				'initstate': 'data/smw.state9x',
 				'heuristic': 'smw',
 				'audio':     False,
 				'granularity': 1,
@@ -21,7 +22,7 @@ defaultargs = {	'libsnes':   'snes9x.dll',
 
 # input bits, for reference:
 # 0000RLXA><v^teYB = 16-bit order
-# in other words, B, Y, Se, St, ^, v, <, >, A, X, L, R = range(12)
+# in other words: B, Y, Se, St, Up, Down, Left, Right, A, X, L, R = range(12)
 
 class SuperOpti(Game):
 	name = 'superopti'
@@ -55,6 +56,7 @@ class SuperOpti(Game):
 
 		self._Heuristic = None
 		try:
+			sys.path.append('./heuristics')
 			self._Heuristic = __import__(self.args['heuristic']).Heuristic
 		except:
 			print 'SuperOpti: could not load given heuristic, falling back to blind'

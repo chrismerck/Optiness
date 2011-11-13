@@ -15,7 +15,7 @@ defaultargs = { 'lookahead':      2,
 				'shortcutrepeat': False }
 
 class Wario(Brain):
-	name = 'wario'
+	name = 'wario_old'
 
 	def __init__(self, game, args = {}):
 		Brain.__init__(self, game, args, defaultargs)
