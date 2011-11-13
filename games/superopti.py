@@ -10,7 +10,7 @@ from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 
 from array import array
 
-defaultargs = {	'libsnes':   'snes9x.dll',
+defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'rom':       'data/smw.sfc',
 				'initstate': 'data/smw.state9x',
 				'heuristic': 'smw',

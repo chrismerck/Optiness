@@ -22,7 +22,6 @@ class Inception(Brain):
 		self.maxdepth = self.depthfactor
 		self.input_log = None
 		self.init_state = game.Freeze()
-		self.terminated = False
 
 	def Step(self):
 		print 'DFS with max depth', self.maxdepth
@@ -45,11 +44,8 @@ class Inception(Brain):
 					return ret
 		return None
 
-	def Event(self, evt):
-		if evt.type == pygame.QUIT:  self.terminated = True
-
 	def Victory(self):
-		return self.input_log is not None
+		return (self.input_log is not None) or self.terminated
 
 	def Path(self):
 		return self.input_log

@@ -53,7 +53,6 @@ class Sagan(Brain):
 		Brain.__init__(self, game, args, defaultargs)
 		self.edge = self.args['edgecost']
 		self.input_log = None
-		self.terminated = False
 
 	def Step(self):
 		# singleton-set minheap containing the initial state.
@@ -84,10 +83,7 @@ class Sagan(Brain):
 		print 'Sagan: end of A* search.'
 
 	def Victory(self):
-		return self.input_log is not None
-
-	def Event(self, evt):
-		if evt.type == pygame.QUIT:  self.terminated = True
+		return (self.input_log is not None) or self.terminated
 
 	def Path(self):
 		return self.input_log

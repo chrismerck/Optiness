@@ -5,6 +5,8 @@ A skeleton class for an Optiness pathfinder
 Darren Alton
 """
 
+import pygame
+
 class Brain:
 	name = 'unnamed solver'
 
@@ -21,6 +23,7 @@ class Brain:
 			if i not in args:
 				args[i] = defaultargs[i]
 		self.args = args
+		self.terminated = False
 
 	# Note: this should 'yield' pygame surfaces throughout execution,
 	#       but it's acceptable to just 'return' a 1-tuple when finished.
@@ -32,7 +35,7 @@ class Brain:
 
 	# true iff a winning path has been found
 	def Victory(self):
-		return self.game.Victory()
+		return self.game.Victory() or self.terminated
 
 	# return the list of input states from start to goal
 	def Path(self):
@@ -40,7 +43,7 @@ class Brain:
 
 	# handle events from pygame, if relevant
 	def Event(self, evt):
-		pass
+		if evt.type == pygame.QUIT:  self.terminated = True
 
 	# return the screen (width, height) that should be used
 	def ScreenSize(self):

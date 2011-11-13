@@ -35,7 +35,7 @@ class Rerun(Brain):
 
 		if self.recordaudio:
 			# todo: some way to determine appropriate framerate from game.  currently using values for snes
-			self.wav = wave.open('{}_{}.wav'.format(self.__class__.name, self.game.__class__.name), 'wb')
+			self.wav = wave.open('output/{}_{}.wav'.format(self.__class__.name, self.game.__class__.name), 'wb')
 			self.wav.setnchannels(2)
 			self.wav.setsampwidth(2)
 			self.wav.setframerate(32000)
@@ -66,7 +66,7 @@ class Rerun(Brain):
 
 			if self.recordvideo:
 				pygame.image.save( surf,
-								   '%s_%s_%04d.png' % ( self.__class__.name,
+								   'output/%s_%s_%04d.png' % ( self.__class__.name,
 														self.game.__class__.name,
 														len(self.outputstring) ) )
 			if self.recordaudio:

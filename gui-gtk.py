@@ -106,20 +106,35 @@ class OptinessGUI(gtk.Window):
 		self.add(self.vbox)
 
 	def clicked_cb(self, widget):
+		global driver, output
+
 		g, ga = ( self.game_picker.mod, self.game_picker.args )
 		b, ba = ( self.brain_picker.mod, self.brain_picker.args )
 		output = self.savefile.get_text()
 
+		print """
+ game: {}
+ args: {}
+brain: {}
+ args: {}
+saving to {}
+""".format(g, ga, b, ba, output)
+
 		driver = common.Driver(g, b, ga, ba)
-		driver.Run()
-		driver.Save(output)
 
 		# it's generally a good idea not to run again without restarting the program,
 		# though it's technically possible in some situations.  might explore this later.
 		# but for now...
-		gtk.main_quit()
+		self.destroy()
+
 
 if __name__ == "__main__":
+	driver = None
+	output = 'data/last_run.pickle'
 	w = OptinessGUI()
 	w.show_all()
 	gtk.main()
+
+	if driver is not None:
+		driver.Run()
+		driver.Save(output)
