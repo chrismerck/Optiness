@@ -88,22 +88,25 @@ class OptinessGUI(gtk.Window):
 		self.game_picker  = OptinessModulePicker('Game', common.util.ListGames())
 		self.brain_picker = OptinessModulePicker('Brain', common.util.ListBrains())
 
-		self.button = gtk.Button('Start')
-		self.button.connect('clicked', self.clicked_cb)
+		button = gtk.Button('Start')
+		button.connect('clicked', self.clicked_cb)
 
 		self.savefile = gtk.Entry()
 		self.savefile.set_text('output/last_run.pickle')
+		hbox_output = gtk.HBox(spacing=4)
+		hbox_output.pack_start(gtk.Label('output'), expand=False)
+		hbox_output.pack_start(self.savefile)
 
-		self.hbox = gtk.HBox(spacing=16)
-		self.hbox.add(self.game_picker)
-		self.hbox.add(self.brain_picker)
+		hbox = gtk.HBox(spacing=16)
+		hbox.add(self.game_picker)
+		hbox.add(self.brain_picker)
 
-		self.vbox = gtk.VBox(spacing=16)
-		self.vbox.pack_start(self.hbox, expand=False)
-		self.vbox.pack_start(self.savefile, expand=False)
-		self.vbox.pack_start(self.button, expand=False)
+		vbox = gtk.VBox(spacing=16)
+		vbox.pack_start(hbox, expand=False)
+		vbox.pack_start(hbox_output, expand=False)
+		vbox.pack_start(button, expand=False)
 
-		self.add(self.vbox)
+		self.add(vbox)
 
 	def clicked_cb(self, widget):
 		global driver, output
@@ -120,12 +123,13 @@ brain: {}
 saving to {}
 """.format(g, ga, b, ba, output)
 
-		driver = common.Driver(g, b, ga, ba)
-
 		# it's generally a good idea not to run again without restarting the program,
 		# though it's technically possible in some situations.  might explore this later.
 		# but for now...
 		self.destroy()
+
+		driver = common.Driver(g, b, ga, ba)
+
 
 
 if __name__ == "__main__":
