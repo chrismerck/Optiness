@@ -27,7 +27,7 @@ def makeframe(alpha=255):
 	pygame.draw.circle(ctrlr, fg, (195,55), 45)
 
 	#dpad center
-	pygame.draw.rect(ctrlr, black, (47,47,15,15))
+	pygame.draw.circle(ctrlr, black, (55,55), 7)
 
 	#bayx outlines
 	pygame.draw.line(ctrlr, bg, (195,74), (220,54), 21)
@@ -55,10 +55,14 @@ def drawbuttons(frame, pad):
 	fg = (150,150,150)
 	black = (50,50,50)
 
-	red = (200,50,0)
-	yellow = (250,200,0)
-	blue = (0,0,200)
-	green = (50,200,0)
+	red = (100,0,150)
+	yellow = red
+	blue = (150,0,200)
+	green = blue
+	#red = (200,50,0)
+	#yellow = (250,200,0)
+	#blue = (0,0,200)
+	#green = (50,200,0)
 
 	ctrlr = frame.copy()
 
@@ -69,8 +73,8 @@ def drawbuttons(frame, pad):
 	if Right: pygame.draw.rect(ctrlr, black, (55,47,20,15))
 
 	#select/start
-	if Se: pygame.draw.line(ctrlr, black, (100,70), (110,60), 10)
-	if St: pygame.draw.line(ctrlr, black, (125,70), (135,60), 10)
+	if Se: pygame.draw.line(ctrlr, black, (100,67), (110,60), 10)
+	if St: pygame.draw.line(ctrlr, black, (125,67), (135,60), 10)
 
 	#ba
 	if B: pygame.draw.circle(ctrlr, yellow, (195,75), 8)

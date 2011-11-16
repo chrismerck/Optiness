@@ -101,12 +101,12 @@ class SuperOpti(Game):
 				dpad.append((rl << 2) | du)
 
 		for RLXA in xrange(0b10000):
-			for rldu in dpad:
-				for teYB in xrange(0b10000):
+			for teYB in xrange(0b10000):
+				for rldu in dpad:
 					val = (RLXA << 8) | (rldu << 4) | teYB
 					val = val & mask
 					if val not in self.valid_inputs:
-						self.valid_inputs.append(val)
+						self.valid_inputs.insert(0, val)
 
 		print 'SuperOpti: generated', len(self.valid_inputs), 'valid inputs'
 
