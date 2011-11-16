@@ -13,7 +13,8 @@ defaultargs = { 'step': 1,
 				'peek': 1,
 				'method': 'dfs',
 				'escapedepth': 5,
-				'escapemethod': 'bfs' }
+				'escapemethod': 'bfs',
+				'shortcut': False }
 
 class Wario(Brain):
 	name = 'wario'
@@ -26,6 +27,7 @@ class Wario(Brain):
 		self.method = self.args['method']
 		self.escapedepth = self.args['escapedepth']
 		self.escapemethod = self.args['escapemethod']
+		self.shortcut = self.args['shortcut']
 
 		self.input_log = []
 

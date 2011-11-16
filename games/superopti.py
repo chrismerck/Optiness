@@ -7,6 +7,7 @@ from skeleton_game import Game
 
 from snes import core as snes_core
 from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
+import snes.pad_drawing as pad_draw
 
 from array import array
 
@@ -18,7 +19,8 @@ defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'granularity': 1,
 #                              RLXA><v^teYB
 				'inputmask': 0b000111000011, # very limited for testing purposes
-				'screen':    (256, 224) }
+				'screen':    (256, 224),
+				'padoverlay': 0 }
 
 # input bits, for reference:
 # 0000RLXA><v^teYB = 16-bit order
@@ -63,6 +65,12 @@ class SuperOpti(Game):
 
 		# number of frames to let a single input persist
 		self.granularity = self.args['granularity']
+
+		# showing what buttons are active
+		self.padoverlay = None
+		opacity = self.args['padoverlay']
+		if opacity > 0:
+			self.padoverlay = pad_draw.makeframe(opacity)
 
 	def HumanInputs(self):
 		return { 'hat0_up':    0b000000010000,
@@ -124,7 +132,10 @@ class SuperOpti(Game):
 		if self.snesfb is None: return None
 		w,h = self.snesfb[1:3]
 		# lots of copying and bitbanging overhead here; might benefit from Cython
-		return pygame.image.frombuffer(snesfb_to_rgb(*self.snesfb), (w,h), 'RGB')
+		surf = pygame.image.frombuffer(snesfb_to_rgb(*self.snesfb), (w,h), 'RGB')
+		if self.padoverlay is not None:
+			surf.blit(pad_draw.drawbuttons(self.padoverlay, self.pad), (3,3))
+		return surf
 
 	def Input(self, pad):
 		# update the internal pad state that will be checked with libsnes' callbacks
