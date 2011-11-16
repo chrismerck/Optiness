@@ -65,7 +65,6 @@ class OptinessArgEntry(gtk.HBox):
 
 	def update_modpicker(self):
 		self.modpicker.args[self.key] = self.val
-		print self.val
 
 	def check_clicked_cb(self, widget):
 		self.val = widget.get_active()
