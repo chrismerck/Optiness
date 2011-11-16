@@ -6,10 +6,12 @@ Optiness PyGTK GUI
 Darren Alton
 """
 
+
 import gtk
 import common
 
 from sys import maxint
+from os.path import exists
 
 # hack for some deprecated thinger in PyGTK 2.24 that isn't in 2.22
 if 'ComboBoxText' not in dir(gtk):  gtk.ComboBoxText = gtk.combo_box_new_text
@@ -42,6 +44,11 @@ class OptinessArgEntry(gtk.HBox):
 			self.spin.set_value(val)
 			self.spin.connect('value-changed', self.spin_changed_cb)
 			self.editor = self.spin
+		elif self.type == str and exists(val):
+			self.file = gtk.FileChooserButton(key)
+			self.file.set_filename(val)
+			self.file.connect('file-set', self.file_set_cb)
+			self.editor = self.file
 		else:
 			self.entry = gtk.Entry()
 			self.entry.set_text( str(val) )
@@ -58,6 +65,7 @@ class OptinessArgEntry(gtk.HBox):
 
 	def update_modpicker(self):
 		self.modpicker.args[self.key] = self.val
+		print self.val
 
 	def check_clicked_cb(self, widget):
 		self.val = widget.get_active()
@@ -68,19 +76,28 @@ class OptinessArgEntry(gtk.HBox):
 		self.val = widget.get_value_as_int()
 		self.update_modpicker()
 
+	def file_set_cb(self, widget):
+		self.val = widget.get_filename()
+		self.update_modpicker()
+
 	def entry_changed_cb(self, widget):
 		self.val = widget.get_text()
 		self.update_modpicker()
 
 	def reset_cb(self, widget):
 		t = type(self.editor)
-		if t == gtk.ToggleButton:  self.check.set_active(self.default)
-		elif t == gtk.SpinButton:  self.spin.set_value(self.default)
-		else:                      self.entry.set_text( str(self.default) )
-		## NOTE: we don't have to do:
-		#self.val = self.default
-		#self.update_modpicker()
-		## because set_active, set_value, and set_text trigger the 'changed' callbacks.
+		if t == gtk.ToggleButton:
+			self.check.set_active(self.default)
+		elif t == gtk.SpinButton:
+			self.spin.set_value(self.default)
+		elif t == gtk.FileChooserButton:
+			self.file.set_filename(self.default)
+			## NOTE: we don't have to do these last two lines for the other three,
+			## because set_active, set_value, and set_text trigger their 'changed' callbacks.
+			self.val = self.default
+			self.update_modpicker()
+		else:
+			self.entry.set_text( str(self.default) )
 
 
 
