@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 """
-An Optiness "pathfinder" that uses A-Star
+An Optiness A-Star "pathfinder" that uses billions and billions of bytes
 Darren Alton
 """
 

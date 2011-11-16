@@ -106,6 +106,12 @@ class Wario(Brain):
 			if self.game.Defeat():
 				continue
 
+			# allow the program to be quit, and respond to OS things while busy
+			if pygame.event.peek(pygame.QUIT):
+				self.terminated = True
+			else:
+				pygame.event.pump()
+
 			# if we found a new best heuristic, update it
 			min_heur = min( min_heur, self.game.Heuristic() )
 
@@ -129,9 +135,11 @@ class Wario(Brain):
 			if self.game.Defeat():
 				continue
 
-			# if we found a lower heuristic, we can escape
-			if self._CheckAndUpdateBest():
-				return instring
+			# only bother with depths we haven't tried already
+			if depth > self.step:
+				# if we found a lower heuristic, we can escape
+				if self._CheckAndUpdateBest():
+					return instring
 
 			# use either DFS or BFS, as configured in __init__
 			self._AddChildrenEscape(fringe, instring, depth, maxdepth)
@@ -153,6 +161,11 @@ class Wario(Brain):
 			# prune, don't bother exploring nodes at or past a death
 			if depth > 0 and self.game.Defeat():
 				continue
+
+			# if we found a winner, we're done
+			if self.game.Victory():
+				best_instring = instring
+				break
 
 			# if it's a new best, update things to reflect that
 			if self._CheckAndUpdateBest(img):
