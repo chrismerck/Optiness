@@ -9,6 +9,8 @@ Darren Alton
 import gtk
 import common
 
+from sys import maxint
+
 # hack for some deprecated thinger in PyGTK 2.24 that isn't in 2.22
 if 'ComboBoxText' not in dir(gtk):  gtk.ComboBoxText = gtk.combo_box_new_text
 
@@ -24,31 +26,61 @@ class OptinessArgEntry(gtk.HBox):
 		self.label = gtk.Label( key )
 		self.label.set_justify(gtk.JUSTIFY_LEFT)
 
-		self.entry = gtk.Entry() # TODO: checkbox for bool, range for int?
-		self.entry.set_text( str(val) )
-		self.entry.set_alignment(1)
-		self.entry.connect('changed', self.changed_cb)
+		self.editor = None
+		self.type = type(val)
+		if self.type == bool:
+			self.check = gtk.ToggleButton(label=str(val))
+			self.check.set_active(val)
+			self.check.connect('clicked', self.check_clicked_cb)
+			self.editor = self.check
+		elif self.type == int:
+			self.spin = gtk.SpinButton()
+			self.spin.set_numeric(True)
+			self.spin.set_range(-maxint, maxint)
+			self.spin.set_increments(1,10)
+			self.spin.set_alignment(1)
+			self.spin.set_value(val)
+			self.spin.connect('value-changed', self.spin_changed_cb)
+			self.editor = self.spin
+		else:
+			self.entry = gtk.Entry()
+			self.entry.set_text( str(val) )
+			self.entry.set_alignment(1)
+			self.entry.connect('changed', self.entry_changed_cb)
+			self.editor = self.entry
 
 		self.reset = gtk.Button('x')
 		self.reset.connect('clicked', self.reset_cb)
 
 		self.pack_start(self.label, expand=False)
-		self.pack_start(self.entry)
+		self.pack_start(self.editor)
 		self.pack_start(self.reset, expand=False)
 
 	def update_modpicker(self):
 		self.modpicker.args[self.key] = self.val
 
-	def changed_cb(self, widget):
+	def check_clicked_cb(self, widget):
+		self.val = widget.get_active()
+		widget.set_label(str(self.val))
+		self.update_modpicker()
+
+	def spin_changed_cb(self, widget):
+		self.val = widget.get_value_as_int()
+		self.update_modpicker()
+
+	def entry_changed_cb(self, widget):
 		self.val = widget.get_text()
 		self.update_modpicker()
 
 	def reset_cb(self, widget):
-		self.entry.set_text( str(self.default) )
+		t = type(self.editor)
+		if t == gtk.ToggleButton:  self.check.set_active(self.default)
+		elif t == gtk.SpinButton:  self.spin.set_value(self.default)
+		else:                      self.entry.set_text( str(self.default) )
 		## NOTE: we don't have to do:
 		#self.val = self.default
 		#self.update_modpicker()
-		## because set_text triggers the changed_cb above.
+		## because set_active, set_value, and set_text trigger the 'changed' callbacks.
 
 
 
