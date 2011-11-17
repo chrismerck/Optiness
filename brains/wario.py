@@ -6,6 +6,7 @@ Darren Alton
 """
 
 import pygame
+from bisect import insort
 
 from skeleton_solver import Brain
 
@@ -15,7 +16,7 @@ defaultargs = { 'step': 1,
 				'escapedepth': 4,
 				'escapemethod': 'dfs',
 				'repeathistory': 0,
-				'motionblur': True }
+				'motionblur': False }
 
 class Wario(Brain):
 	name = 'wario'
@@ -32,6 +33,7 @@ class Wario(Brain):
 		self.motionblur = self.args['motionblur']
 
 		self.input_log = []
+		self.history = []
 
 		self.best_state = self.game.Freeze()
 		self.best_heur = self.game.Heuristic()
@@ -76,7 +78,10 @@ class Wario(Brain):
 
 		return False
 
-	def _RunString(self, instring):
+	def _RunString(self, instring, state=None):
+		if state is not None:
+			self.game.Thaw(state)
+
 		for j in instring:
 			self.game.Input(j)
 
@@ -120,7 +125,9 @@ class Wario(Brain):
 	def _LookAhead(self, start_state):
 		min_heur = self.game.Heuristic()
 		maxdepth = self.peek
-		if maxdepth <= 0:  return min_heur
+		if maxdepth <= 0:
+			pygame.event.pump()
+			return min_heur
 
 		fringe = [(0,[])]
 		while len(fringe) and not self.terminated:
@@ -171,12 +178,68 @@ class Wario(Brain):
 		self.game.Thaw(start_state)
 		return None
 
+	def _RepeatHistory(self):
+		# only if the history has a bit of a repertoire should we use it
+		if len(self.history) == self.repeathistory:
+			start_state = self.best_state
+			start_heur = self.best_heur
+			best_instring = []
+
+			for i in xrange(len(self.history)):
+				# reusing _GrabAndRun is a bit of a hack here.  see if you can figure out why!
+				dh_old,instring,img = self._GrabAndRun([self.history[i]], start_state, render=True)
+
+				# if it's a new best, update things to reflect that
+				if self._CheckAndUpdateBest(img):
+					best_instring = instring
+					# update its historical score if necessary
+					dh_new = self.best_heur - start_heur
+					if dh_new < dh_old:
+						self.history[i] = (dh_new, instring)
+						self.history.sort()
+
+				yield self._UpdateScreen(surf=img)
+
+			# if repeating history worked, use it.
+			# TODO: threshold it more aggressively than "<"
+			if self.best_heur < start_heur:
+				self.input_log += best_instring
+				self.repeated = True
+
+	# update the history (sorted by delta heur)
+	def _UpdateHistory(self, dh, best_instring):
+		hist_entry = (dh, best_instring)
+		# if it's not the first input string we have...
+		if dh != float('-inf'):
+			# if it's not full and the string isn't already in there...
+			if len(self.history) < self.repeathistory:
+				found = False
+				for dh,instring in self.history:
+					if instring == best_instring:
+						found = True
+						break
+				if not found:
+					insort(self.history, hist_entry)
+			# if it is full (and we have a history at all)...
+			elif len(self.history):
+				# if it's better than our worst, replace our worst
+				if hist_entry < self.history[-1]:
+					self.history[-1] = hist_entry
+					self.history.sort()
+
 	# do a depth-limited search looking for the best input string to use
 	def Step(self):
-		start_state = self.best_state
-		best_instring = []
 		maxdepth = self.step
+		start_state = self.best_state
+		start_heur = self.best_heur
+		best_instring = []
 
+		# try repeating history
+		self.repeated = False
+		for i in self._RepeatHistory():  yield i
+		if self.repeated:  return
+
+		# otherwise, search properly
 		fringe = [(0,[])]
 		while len(fringe) and not self.terminated:
 			depth,instring,img = self._GrabAndRun(fringe, start_state, render=True)
@@ -201,6 +264,8 @@ class Wario(Brain):
 
 		if len(best_instring):
 			self.input_log += best_instring
+			dh = (self.best_heur - start_heur)
+			self._UpdateHistory(dh, best_instring)
 		elif not self.terminated:
 			print 'Wario: got stuck, attempting a deeper search to escape...',
 			escape_path = self._Escape()
