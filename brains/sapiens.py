@@ -10,7 +10,9 @@ import pygame
 from skeleton_solver import Brain
 
 defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
-                'joynum': 0 }
+                'joynum': 0,
+				'keyhat': 'wsad',
+				'keybuttons': 'klji1056' }
 
 class Sapiens(Brain):
 	name = 'sapiens'
@@ -22,24 +24,36 @@ class Sapiens(Brain):
 		self.clock = pygame.time.Clock()
 
 		pygame.joystick.init()
-		self.joy = pygame.joystick.Joystick(self.args['joynum'])
-		self.joy.init()
-		print 'Sapiens:', self.joy.get_name()
+		joynum = self.args['joynum']
+		if joynum >= 0:
+			self.joy = pygame.joystick.Joystick(joynum)
+			self.joy.init()
+			print 'Sapiens:', self.joy.get_name()
 
 		self.input_log = []
 		self.input_map = game.HumanInputs()
 		self.pad = 0
 		self.won = False
 
+		UDLR = ('up', 'down', 'left', 'right')
+
 		map = self.input_map
 		self.hat_reset = 0
-		for i in ('up', 'down', 'left', 'right'):
+		for i in UDLR:
 			str = 'hat0_{}'.format(i)
 			if str in map:  self.hat_reset |= map[str]
 		self.hat_reset = ~self.hat_reset
 		self.hat_lut = [ { -1: 'left', 1:  'right' },
 			             { 1:  'up',   -1: 'down' } ]
 
+		self.key_map = {}
+		keyhat = self.args['keyhat']
+		for i in xrange(len(keyhat)):
+			str = 'hat0_{}'.format(UDLR[i])
+			self.key_map[ord(keyhat[i])] = map[str]
+		keybuttons = self.args['keybuttons']
+		for i in xrange(len(keybuttons)):
+			self.key_map[ord(keybuttons[i])] = map[i]
 
 	def Step(self):
 		self.clock.tick(self.fps)
@@ -53,6 +67,7 @@ class Sapiens(Brain):
 
 	def Event(self, evt):
 		map = self.input_map
+		kmap = self.key_map
 		if evt.type == pygame.JOYHATMOTION:
 			hat = evt.value
 			lut = self.hat_lut
@@ -65,6 +80,10 @@ class Sapiens(Brain):
 			if evt.button in map:  self.pad |= map[evt.button]
 		elif evt.type == pygame.JOYBUTTONUP:
 			if evt.button in map:  self.pad &= ~map[evt.button]
+		elif evt.type == pygame.KEYDOWN:
+			if evt.key in kmap:  self.pad |= kmap[evt.key]
+		elif evt.type == pygame.KEYUP:
+			if evt.key in kmap:  self.pad &= ~kmap[evt.key]
 
 	def Path(self):
 		return self.input_log
