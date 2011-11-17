@@ -50,7 +50,9 @@ class Wario(Brain):
 		x = 0
 		if right: x = self.screenmidpoint
 
-		self.screen.blit(surf, (x,0))
+		if surf is not None:
+			self.screen.blit(surf, (x,0))
+
 		return self.screen
 
 	def _CheckAndUpdateBest(self, img=None):
