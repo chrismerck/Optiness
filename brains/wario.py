@@ -12,8 +12,8 @@ from skeleton_solver import Brain
 defaultargs = { 'step': 1,
 				'peek': 1,
 				'method': 'dfs',
-				'escapedepth': 5,
-				'escapemethod': 'bfs',
+				'escapedepth': 4,
+				'escapemethod': 'dfs',
 				'shortcut': False }
 
 class Wario(Brain):

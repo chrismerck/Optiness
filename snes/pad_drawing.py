@@ -57,7 +57,7 @@ def drawbuttons(frame, pad):
 
 	red = (100,0,150)
 	yellow = red
-	blue = (150,0,200)
+	blue = (150,50,200)
 	green = blue
 	#red = (200,50,0)
 	#yellow = (250,200,0)
