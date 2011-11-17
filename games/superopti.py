@@ -20,7 +20,7 @@ defaultargs = {	'libsnes':   'data/snes9x.dll',
 #                              RLXA><v^teYB
 				'inputmask': 0b000111000011, # very limited for testing purposes
 				'screen':    (256, 224),
-				'padoverlay': 0 }
+				'padoverlay': True }
 
 # input bits, for reference:
 # 0000RLXA><v^teYB = 16-bit order
@@ -68,9 +68,8 @@ class SuperOpti(Game):
 
 		# showing what buttons are active
 		self.padoverlay = None
-		opacity = self.args['padoverlay']
-		if opacity > 0:
-			self.padoverlay = pad_draw.makeframe(opacity)
+		if self.args['padoverlay']:
+			self.padoverlay = pad_draw.makeframe()
 
 	def HumanInputs(self):
 		return { 'hat0_up':    0b000000010000,
@@ -132,10 +131,17 @@ class SuperOpti(Game):
 		if self.snesfb is None: return None
 		w,h = self.snesfb[1:3]
 		# lots of copying and bitbanging overhead here; might benefit from Cython
-		surf = pygame.image.frombuffer(snesfb_to_rgb(*self.snesfb), (w,h), 'RGB')
+		game_img = pygame.image.frombuffer(snesfb_to_rgb(*self.snesfb), (w,h), 'RGB')
+
+		# draw the gamepad underneath if enabled
 		if self.padoverlay is not None:
-			surf.blit(pad_draw.drawbuttons(self.padoverlay, self.pad), (3,3))
-		return surf
+			pad_img = pad_draw.drawbuttons(self.padoverlay, self.pad)
+			joined = pygame.Surface(self.ScreenSize())
+			joined.blit(game_img, (0,0))
+			joined.blit(pad_img, (3, game_img.get_height()))
+			return joined
+
+		return game_img
 
 	def Input(self, pad):
 		# update the internal pad state that will be checked with libsnes' callbacks
@@ -163,5 +169,11 @@ class SuperOpti(Game):
 		tmp = self.soundbuf
 		self.soundbuf = array('H', [])
 		return tmp
+
+	def ScreenSize(self):
+		w,h = self.args['screen']
+		if self.padoverlay is not None:
+			return (w, h+self.padoverlay.get_height())
+		return (w,h)
 
 LoadedGame = SuperOpti
