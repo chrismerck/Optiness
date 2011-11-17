@@ -14,7 +14,8 @@ defaultargs = { 'step': 1,
 				'method': 'dfs',
 				'escapedepth': 4,
 				'escapemethod': 'dfs',
-				'shortcut': False }
+				'repeathistory': 0,
+				'motionblur': True }
 
 class Wario(Brain):
 	name = 'wario'
@@ -27,7 +28,8 @@ class Wario(Brain):
 		self.method = self.args['method']
 		self.escapedepth = self.args['escapedepth']
 		self.escapemethod = self.args['escapemethod']
-		self.shortcut = self.args['shortcut']
+		self.repeathistory = self.args['repeathistory']
+		self.motionblur = self.args['motionblur']
 
 		self.input_log = []
 
@@ -74,14 +76,32 @@ class Wario(Brain):
 
 		return False
 
-	def _RunString(self, instring, state=None):
-		if state is not None:  self.game.Thaw(state)
+	def _RunString(self, instring):
 		for j in instring:
 			self.game.Input(j)
 
-	def _GrabAndRun(self, fringe, start_state):
+	def _GrabAndRun(self, fringe, state, render=False):
 		depth,instring = fringe.pop()
-		self._RunString(instring, start_state)
+
+		if state is not None:
+			self.game.Thaw(state)
+
+		if render and self.motionblur:
+			surf = self.game.Draw()
+			for j in instring:
+				self.game.Input(j)
+				stepsurf = self.game.Draw()
+				if surf is None:
+					surf = stepsurf
+				else:
+					stepsurf.set_alpha(160)
+					surf.blit(stepsurf, (0,0))
+			return (depth,instring,surf)
+
+		self._RunString(instring)
+		if render:
+			return ( depth, instring, self.game.Draw() )
+
 		return (depth,instring)
 
 	# add new children to explore if we haven't hit our limit
@@ -159,8 +179,7 @@ class Wario(Brain):
 
 		fringe = [(0,[])]
 		while len(fringe) and not self.terminated:
-			depth,instring = self._GrabAndRun(fringe, start_state)
-			img = self.game.Draw()
+			depth,instring,img = self._GrabAndRun(fringe, start_state, render=True)
 
 			# prune, don't bother exploring nodes at or past a death
 			if depth > 0 and self.game.Defeat():
