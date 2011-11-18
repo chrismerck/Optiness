@@ -128,7 +128,10 @@ class SuperOpti(Game):
 
 	# only convert the screen from 16-bit format to RGB888 when we need it
 	def Draw(self):
-		if self.snesfb is None: return None
+		# if we don't have something to draw, or if there's no point in drawing it
+		if self.snesfb is None or not pygame.display.get_active():
+			return None
+
 		w,h = self.snesfb[1:3]
 		# lots of copying and bitbanging overhead here; might benefit from Cython
 		game_img = pygame.image.frombuffer(snesfb_to_rgb(*self.snesfb), (w,h), 'RGB')
