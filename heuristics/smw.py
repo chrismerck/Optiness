@@ -15,7 +15,19 @@ def Heuristic(self):
 	mario_y = self._Word(0xD4,0xD3)
 	mario_anim = self._Byte(0x71)
 
+	#mario_xvel = self._Byte(0x7B)
+	#mario_yvel = self._Byte(0x7D)
+	#mario_xvel_fractional = self._Byte(0x7A)
+	mario_dash_timer = self._Byte(0x13E4)
+
 	if mario_anim == mario_dead_anim or mario_y > level_ground_ypos:
 		return dead
 
-	return level_end - mario_x
+	if mario_x > level_end:
+		return 0
+
+	return (level_end - mario_x) + (0x70 - mario_dash_timer)
+
+def Tiebreaker(self):
+	mario_dash_timer = self._Byte(0x13E4)
+	return mario_dash_timer
