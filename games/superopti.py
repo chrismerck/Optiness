@@ -17,8 +17,7 @@ defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'heuristic': 'smw',
 				'audio':     False,
 				'granularity': 1,
-#                              RLXA><v^teYB
-				'inputmask': 0b000111000011, # very limited for testing purposes
+				'inputmask': '<>YBA', # very limited for testing purposes
 				'screen':    (256, 224),
 				'padoverlay': True }
 
@@ -88,24 +87,23 @@ class SuperOpti(Game):
 	def ValidInputs(self):
 		return self.valid_inputs
 
-	def GenerateValidInputs(self, mask):
+	def GenerateValidInputs(self, maskstring):
+		from itertools import chain, combinations
+		def powerset(iterable):
+			s = list(iterable)
+			return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+		padmap = 'BY?!^v<>AXLR'
 		self.valid_inputs = []
+		U,D,L,R = [1<<padmap.index(i) for i in '^v<>']
 
-		# special case.  8 directions + centered.
-		dpad = []
-		for du_index in xrange(3):
-			du = 0b10 >> du_index
-			for rl_index in xrange(3):
-				rl = 0b10 >> rl_index
-				dpad.append((rl << 2) | du)
-
-		for RLXA in xrange(0b10000):
-			for teYB in xrange(0b10000):
-				for rldu in dpad:
-					val = (RLXA << 8) | (rldu << 4) | teYB
-					val = val & mask
-					if val not in self.valid_inputs:
-						self.valid_inputs.insert(0, val)
+		pset = list(powerset(maskstring))
+		for i in pset:
+			pad = 0
+			for j in i:
+				pad |= 1<<padmap.index(j)
+			if not (pad&U and pad&D) and not (pad&L and pad&R):
+				self.valid_inputs.insert(0,pad)
 
 		print 'SuperOpti: generated', len(self.valid_inputs), 'valid inputs'
 
