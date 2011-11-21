@@ -13,17 +13,13 @@ from array import array
 
 defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'rom':       'data/smw.sfc',
-				'initstate': 'data/smw.state9x',
+				'initstate': 'data/smw/smw_1-2.state9x',
 				'heuristic': 'smw',
 				'audio':     False,
 				'granularity': 1,
-				'inputmask': '<>YBA', # very limited for testing purposes
+				'inputmask': '>YBA<', # very limited for testing purposes
 				'screen':    (256, 224),
 				'padoverlay': True }
-
-# input bits, for reference:
-# 0000RLXA><v^teYB = 16-bit order
-# in other words: B, Y, Se, St, Up, Down, Left, Right, A, X, L, R = range(12)
 
 class SuperOpti(Game):
 	name = 'superopti'
@@ -93,6 +89,9 @@ class SuperOpti(Game):
 			s = list(iterable)
 			return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
+		# input bits, for reference:
+		# 0000RLXA><v^teYB = 16-bit order
+		# in other words: B, Y, Se, St, Up, Down, Left, Right, A, X, L, R = range(12)
 		padmap = 'BY?!^v<>AXLR'
 		self.valid_inputs = []
 		U,D,L,R = [1<<padmap.index(i) for i in '^v<>']

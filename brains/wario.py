@@ -59,17 +59,24 @@ class Wario(Brain):
 
 		return self.screen
 
-	def _CheckAndUpdateBest(self, img=None):
+	def _CheckAndUpdateBest(self, img=None, historical=False):
 		# find out if the node we're exploring is promising
 		current = self.game.Freeze()
 		h = self._LookAhead(current)
+		hh = h
+
+		if historical:
+			hh = float('inf')
+			for hist_entry in self.history:
+				self._RunString(hist_entry[1], current)
+				hh = min(hh, self._LookAhead())
 
 		# give some insight to the user
 		s = '{} vs. {}'.format(self.best_heur, h)
 		pygame.display.set_caption(s)
 
 		# if it's a new best, update things to reflect that
-		if h < self.best_heur:
+		if hh < self.best_heur:
 			self.best_heur = h
 			self.best_state = current
 			if img is not None:
@@ -122,12 +129,15 @@ class Wario(Brain):
 				fringe.insert( 0, ( depth+1, instring+[child] ) )
 
 	# return the score of the best possible future of a given state
-	def _LookAhead(self, start_state):
+	def _LookAhead(self, start_state=None):
 		min_heur = self.game.Heuristic()
 		maxdepth = self.peek
 		if maxdepth <= 0:
 			pygame.event.pump()
 			return min_heur
+
+		if start_state is None:
+			start_state = self.game.Freeze()
 
 		fringe = [(0,[])]
 		while len(fringe) and not self.terminated:
@@ -190,7 +200,7 @@ class Wario(Brain):
 				dh_old,instring,img = self._GrabAndRun([self.history[i]], start_state, render=True)
 
 				# if it's a new best, update things to reflect that
-				if self._CheckAndUpdateBest(img):
+				if self._CheckAndUpdateBest(img, historical=True):
 					best_instring = instring
 					# update its historical score if necessary
 					dh_new = self.best_heur - start_heur

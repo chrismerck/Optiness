@@ -10,6 +10,7 @@ def Heuristic(self):
 
 	level_ground_ypos = 380
 	mario_dead_anim = 9
+	mario_dash_timer_max = 0x70
 
 	level_screen_count = self._Byte(0x05D)
 	level_finished_timer = self._Byte(0x1493)  # this byte is set to 255 when the goal is reached
@@ -26,6 +27,7 @@ def Heuristic(self):
 	# this should be a general estimate of where the goal tape is for most levels
 	level_goal_position = (level_screen_count-1)*256
 
+	# is mario dead?
 	if mario_anim == mario_dead_anim or mario_y > level_ground_ypos:
 		return dead
 
@@ -33,4 +35,4 @@ def Heuristic(self):
 	if level_finished_timer > 0:
 		return 0
 
-	return (level_goal_position - mario_x) + (0x70 - mario_dash_timer)
+	return (level_goal_position - mario_x) + (mario_dash_timer_max - mario_dash_timer)
