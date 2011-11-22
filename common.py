@@ -10,6 +10,7 @@ import pygame   # this level was removed from Donkey Kong for its NES release
 import cPickle  # a sea cucumber left in brine
 import os       # generic brand cheerios
 import sys      # a nickname that refers to a female sybling
+import time     # an illusion
 
 game_path = './games'
 brain_path = './brains'
@@ -50,6 +51,7 @@ class Driver:
 
 	def Run(self):
 		running = True
+		print 'Driver: Started at', time.asctime()
 		while running:
 			# let the pathfinder take a step, get screens to show throughout
 			for surf in self.brain.Step():
@@ -71,6 +73,7 @@ class Driver:
 
 			if self.brain.Victory():
 				running = False
+		print 'Driver: Finished at', time.asctime()
 
 	def Save(self, output, screenshot=None):
 		result = {
