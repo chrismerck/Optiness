@@ -25,7 +25,7 @@ def Heuristic(self):
 	#mario_xvel_fractional = self._Byte(0x7A)
 
 	# this should be a general estimate of where the goal tape is for most levels
-	level_goal_position = (level_screen_count-1)*256
+	level_goal_position = (level_screen_count)*256
 
 	# is mario dead?
 	if mario_anim == mario_dead_anim or mario_y > level_ground_ypos:
@@ -35,4 +35,7 @@ def Heuristic(self):
 	if level_finished_timer > 0:
 		return 0
 
-	return (level_goal_position - mario_x) + (mario_dash_timer_max - mario_dash_timer)
+	# decreases to 0 as mario approaches top speed
+	dash_inhibition = mario_dash_timer_max - mario_dash_timer
+
+	return (level_goal_position - mario_x) + (dash_inhibition/2)

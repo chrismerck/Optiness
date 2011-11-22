@@ -17,6 +17,7 @@ defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'heuristic': 'smw',
 				'audio':     False,
 				'granularity': 1,
+				'tweening':    0,
 				'inputmask': '>YBA<', # very limited for testing purposes
 				'screen':    (256, 224),
 				'padoverlay': True }
@@ -61,6 +62,11 @@ class SuperOpti(Game):
 		# number of frames to let a single input persist
 		self.granularity = self.args['granularity']
 
+		# maximum length of inputs before making a new 'keyframe' state
+		self.tweening = self.args['tweening']
+		self.keyframe = None
+		self.inputs_since_keyframe = []
+
 		# showing what buttons are active
 		self.padoverlay = None
 		if self.args['padoverlay']:
@@ -87,17 +93,16 @@ class SuperOpti(Game):
 		from itertools import chain, combinations
 		def powerset(iterable):
 			s = list(iterable)
-			return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+			return chain.from_iterable(combinations(s, r) for r in xrange(len(s)+1))
 
 		# input bits, for reference:
-		# 0000RLXA><v^teYB = 16-bit order
+		# 0000RLXA><v^!?YB = 16-bit order
 		# in other words: B, Y, Se, St, Up, Down, Left, Right, A, X, L, R = range(12)
 		padmap = 'BY?!^v<>AXLR'
 		self.valid_inputs = []
 		U,D,L,R = [1<<padmap.index(i) for i in '^v<>']
 
-		pset = list(powerset(maskstring))
-		for i in pset:
+		for i in powerset(maskstring):
 			pad = 0
 			for j in i:
 				pad |= 1<<padmap.index(j)
@@ -117,10 +122,29 @@ class SuperOpti(Game):
 		self.soundbuf += array('H', (left,right))
 
 	def Freeze(self):
+		if self.keyframe is not None:
+			return (self.keyframe, self.inputs_since_keyframe[:])
 		return self.emu.serialize()
 
 	def Thaw(self, state):
-		self.emu.unserialize(state)
+		if type(state) == tuple:
+			realstate,instring = state
+			tweens = len(self.inputs_since_keyframe)
+			if self.keyframe == realstate and instring[:tweens] == self.inputs_since_keyframe:
+				for i in instring[tweens:]:
+					self.Input(i)
+			else:
+				self.emu.unserialize(realstate)
+				self.keyframe = realstate
+				self.inputs_since_keyframe = []
+				for i in instring:
+					self.Input(i)
+		else:
+			self.emu.unserialize(state)
+			if self.tweening:
+				self.keyframe = state
+				self.inputs_since_keyframe = []
+
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
 
 	# only convert the screen from 16-bit format to RGB888 when we need it
@@ -146,9 +170,21 @@ class SuperOpti(Game):
 	def Input(self, pad):
 		# update the internal pad state that will be checked with libsnes' callbacks
 		self.pad = pad
-		for i in xrange(self.granularity):  self.emu.run()
+		for i in xrange(self.granularity):
+			self.emu.run()
+
+		# do keyframe/tweening if relevant
+		if self.tweening:
+			if len(self.inputs_since_keyframe) >= self.tweening or self.keyframe is None:
+				self.keyframe = self.emu.serialize()
+				self.inputs_since_keyframe = []
+			else:
+				self.inputs_since_keyframe.append(pad)
+
+		# fetch the work RAM (for heuristics to access)
 		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
-		if self.wram is None: print 'SuperOpti: error retrieving RAM'
+		if self.wram is None:
+			print 'SuperOpti: error retrieving RAM'
 
 	def _Byte(self, ofs):
 		if self.wram is None:  return 0
