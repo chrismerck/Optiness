@@ -6,19 +6,19 @@ import sys
 from skeleton_game import Game
 
 from snes import core as snes_core
-from snes.util import snes_framebuffer_to_RGB888 as snesfb_to_rgb
 import snes.pad_drawing as pad_draw
 
 from array import array
+from ctypes import string_at
 
 defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'rom':       'data/smw.sfc',
 				'initstate': 'data/smw/smw_1-2.state9x',
 				'heuristic': 'smw',
 				'audio':     False,
-				'granularity': 1,
+				'granularity': 10,
 				'tweening':    0,
-				'inputmask': '>YBA<', # very limited for testing purposes
+				'inputmask': '>XA', # very limited for testing purposes
 				'screen':    (256, 224),
 				'padoverlay': True }
 
@@ -43,6 +43,9 @@ class SuperOpti(Game):
 		# register drawing and input-reading callbacks
 		self.emu.set_video_refresh_cb(self._video_refresh_cb)
 		self.emu.set_input_state_cb(self._input_state_cb)
+
+		# unplug player 2 controller so we don't get twice as many input state callbacks
+		self.emu.set_controller_port_device(snes_core.PORT_2, snes_core.DEVICE_NONE)
 
 		# only bother with the overhead of audio if it's requested
 		if self.args['audio']:  self.emu.set_audio_sample_cb(self._audio_sample_cb)
@@ -112,7 +115,9 @@ class SuperOpti(Game):
 		print 'SuperOpti: generated', len(self.valid_inputs), 'valid inputs'
 
 	def _video_refresh_cb(self, data, width, height, hires, interlace, overscan, pitch):
-		self.snesfb = (data, width, height, pitch)
+		if self.snesfb is None:
+			self.snesfb = pygame.Surface((pitch, height), depth=15, masks=(0x7c00, 0x03e0, 0x001f, 0))
+		self.snesfb.get_buffer().write(string_at(data,pitch*height*2), 0)
 
 	def _input_state_cb(self, port, device, index, id):
 		if port or not(0 <= id < 12): return False # player2 or undefined button
@@ -150,12 +155,10 @@ class SuperOpti(Game):
 	# only convert the screen from 16-bit format to RGB888 when we need it
 	def Draw(self):
 		# if we don't have something to draw, or if there's no point in drawing it
-		if self.snesfb is None or not pygame.display.get_active():
+		if self.snesfb is None: #or not pygame.display.get_active():
 			return None
 
-		w,h = self.snesfb[1:3]
-		# lots of copying and bitbanging overhead here; might benefit from Cython
-		game_img = pygame.image.frombuffer(snesfb_to_rgb(*self.snesfb), (w,h), 'RGB')
+		game_img = self.snesfb
 
 		# draw the gamepad underneath if enabled
 		if self.padoverlay is not None:
@@ -170,6 +173,8 @@ class SuperOpti(Game):
 	def Input(self, pad):
 		# update the internal pad state that will be checked with libsnes' callbacks
 		self.pad = pad
+
+		# run for the specified number of frames on that pad state
 		for i in xrange(self.granularity):
 			self.emu.run()
 
