@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-import sys, getopt, ctypes
+import sys, getopt, ctypes, struct
 import pygame, numpy
 
 from snes import core as snes_core
@@ -17,8 +17,10 @@ video_frameskip = 0
 video_frameskip_idx = 0
 
 # sound buffer initialization and details.
-soundbuf_idx = 0
 soundbuf_size = 512
+soundbuf_raw = ''
+soundbuf_buf = None
+soundbuf_playing = False
 
 # joypad: xinput (x360) layout by default.
 #             BYet^v<>AXLR
@@ -107,12 +109,14 @@ def video_refresh(data, width, height, hires, interlace, overscan, pitch):
 		pygame.display.flip()
 
 def audio_sample(left, right):
-	global soundbuf, soundbuf_idx, soundbuf_size
-	soundbuf[soundbuf_idx] = (left,right)
-	soundbuf_idx += 1
-	if soundbuf_idx >= soundbuf_size:
-		pygame.sndarray.make_sound(soundbuf).play()
-		soundbuf_idx = 0
+	global soundbuf, soundbuf_buf, soundbuf_raw, soundbuf_playing
+	soundbuf_raw += struct.pack('<HH', left, right)
+	if not soundbuf_playing:
+		soundbuf_playing = True
+		soundbuf.play(loops=-1)
+	if len(soundbuf_raw) >= soundbuf_buf.length:
+		soundbuf_buf.write(soundbuf_raw, 0)
+		soundbuf_raw = ''
 
 def input_state(port, device, index, id):
 	global joymap
@@ -151,7 +155,8 @@ screen = pygame.display.set_mode((256,224))
 
 # init pygame sound.  snes freq is 32000, 16bit unsigned stereo.
 pygame.mixer.init(frequency=32000, size=16, channels=2, buffer=soundbuf_size)
-soundbuf = numpy.zeros( (soundbuf_size,2), dtype='uint16', order='C' )
+soundbuf = pygame.sndarray.make_sound(numpy.zeros( (soundbuf_size,2), dtype='uint16', order='C' ))
+soundbuf_buf = soundbuf.get_buffer()
 
 # init pygame joypad input
 pygame.joystick.init()
@@ -179,7 +184,6 @@ emu.set_input_state_cb(input_state)
 
 # unplug player 2 controller so we don't get twice as many input state callbacks
 emu.set_controller_port_device(snes_core.PORT_2, snes_core.DEVICE_NONE)
-
 
 # run each frame until closed.
 running = True
