@@ -1,10 +1,9 @@
 #!/usr/bin/env python2
-import sys, numpy, pygame
+
+import sys, getopt, ctypes
+import pygame, numpy
 
 from snes import core as snes_core
-from snes.util import snes_framebuffer_to_RGB888
-
-import getopt
 
 
 
@@ -13,7 +12,8 @@ libsnes = '/usr/lib/libsnes-compatibility.so'
 if sys.platform == 'win32':  libsnes = 'snes.dll'
 
 # frameskip
-video_frameskip = 2
+convsurf = None
+video_frameskip = 0
 video_frameskip_idx = 0
 
 # sound buffer initialization and details.
@@ -94,15 +94,16 @@ except Exception, e:
 
 # callback functions...
 def video_refresh(data, width, height, hires, interlace, overscan, pitch):
-	global video_frameskip, video_frameskip_idx
+	global video_frameskip, video_frameskip_idx, convsurf
 	video_frameskip_idx += 1
 	if video_frameskip_idx > video_frameskip:
 		video_frameskip_idx = 0
-		im = pygame.image.frombuffer(
-			snes_framebuffer_to_RGB888(data, width, height, pitch),
-			(width, height), 'RGB'
-		)
-		screen.blit(im, (0,0))
+		if convsurf is None:
+			convsurf = pygame.Surface(
+				(pitch, height), depth=15, masks=(0x7c00, 0x03e0, 0x001f, 0)
+			)
+		convsurf.get_buffer().write(ctypes.string_at(data,pitch*height*2), 0)
+		screen.blit(convsurf, (0,0))
 		pygame.display.flip()
 
 def audio_sample(left, right):
@@ -176,6 +177,8 @@ emu.set_video_refresh_cb(video_refresh)
 emu.set_audio_sample_cb(audio_sample)
 emu.set_input_state_cb(input_state)
 
+# unplug player 2 controller so we don't get twice as many input state callbacks
+emu.set_controller_port_device(snes_core.PORT_2, snes_core.DEVICE_NONE)
 
 
 # run each frame until closed.
