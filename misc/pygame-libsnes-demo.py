@@ -12,6 +12,7 @@ libsnes = '/usr/lib/libsnes-compatibility.so'
 if sys.platform == 'win32':  libsnes = 'snes.dll'
 
 # frameskip
+screen = None
 convsurf = None
 video_frameskip = 0
 video_frameskip_idx = 0
@@ -96,16 +97,25 @@ except Exception, e:
 
 # callback functions...
 def video_refresh(data, width, height, hires, interlace, overscan, pitch):
-	global video_frameskip, video_frameskip_idx, convsurf
+	global video_frameskip, video_frameskip_idx, convsurf, screen
 	video_frameskip_idx += 1
+
+	# init pygame display here, once we know the width and height.
+	if screen is None:
+		screen = pygame.display.set_mode((width,height))
+
 	if video_frameskip_idx > video_frameskip:
 		video_frameskip_idx = 0
+		# make a surface with the SNES's pixel format, so pygame automatically converts
 		if convsurf is None:
 			convsurf = pygame.Surface(
 				(pitch, height), depth=15, masks=(0x7c00, 0x03e0, 0x001f, 0)
 			)
 		convsurf.get_buffer().write(ctypes.string_at(data,pitch*height*2), 0)
-		screen.blit(convsurf, (0,0))
+		if hires:
+			screen.blit(pygame.transform.scale(convsurf, (pitch/2,height)), (0,0))
+		else:
+			screen.blit(convsurf, (0,0))
 		pygame.display.flip()
 
 def audio_sample(left, right):
@@ -149,9 +159,6 @@ for i in xrange(12):
 		joymap[i] = int(button)
 
 
-
-# init pygame display
-screen = pygame.display.set_mode((256,224))
 
 # init pygame sound.  snes freq is 32000, 16bit unsigned stereo.
 pygame.mixer.init(frequency=32000, size=16, channels=2, buffer=soundbuf_size)
