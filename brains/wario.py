@@ -176,6 +176,10 @@ class Wario(Brain):
 			if self.game.Defeat():
 				continue
 
+			# if we have a win, use it
+			if self.game.Victory():
+				return instring
+
 			# only bother with depths we haven't tried already
 			if depth > self.step:
 				# if we found a lower heuristic, we can escape
