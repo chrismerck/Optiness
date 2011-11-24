@@ -102,6 +102,7 @@ def video_refresh(data, width, height, hires, interlace, overscan, pitch):
 
 	# init pygame display here, once we know the width and height.
 	if screen is None:
+		if hires:  width /= 2
 		screen = pygame.display.set_mode((width,height))
 
 	if video_frameskip_idx > video_frameskip:
@@ -200,3 +201,8 @@ while running:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			running = False
+		elif event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_F2:
+				open('emu.state', 'wb').write(emu.serialize())
+			elif event.key == pygame.K_F4:
+				emu.unserialize(open('emu.state', 'rb').read())
