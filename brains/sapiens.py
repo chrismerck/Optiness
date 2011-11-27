@@ -9,10 +9,15 @@ import pygame
 
 from skeleton_solver import Brain
 
+pygame.joystick.init()     # hack to allow argument validation
+
 defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
                 'joynum': 0,
 				'keyhat': 'wsad',
 				'keybuttons': 'klji1056' }
+
+validargs = { 'fps':         lambda x: x >= 0,
+			  'joynum':      lambda x: x == 0 or (x > 0 and x < pygame.joystick.get_count()) }
 
 class Sapiens(Brain):
 	name = 'sapiens'
@@ -23,7 +28,6 @@ class Sapiens(Brain):
 		self.fps = self.args['fps']
 		self.clock = pygame.time.Clock()
 
-		pygame.joystick.init()
 		joynum = self.args['joynum']
 		if joynum >= 0:
 			self.joy = pygame.joystick.Joystick(joynum)

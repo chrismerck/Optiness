@@ -33,7 +33,11 @@ class UtilType:
 	def ListBrains(self): return self.ListModules(brain_path)
 
 	def GetArgs(self, modname):
-		return __import__(modname).defaultargs.copy()
+		mod = __import__(modname)
+		validators = {}
+		if hasattr(mod, 'validargs'):
+			validators = mod.validargs
+		return (mod.defaultargs.copy(), validators.copy())
 
 util = UtilType()
 

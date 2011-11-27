@@ -46,6 +46,13 @@ class LowLevelWrapper(object):
 				)
 
 		# Set up prototypes for all the self._lib functions.
+
+		# The return value of snes_library_id is a string that belongs to the
+		# library, not to us, so I hope ctypes doesn't call free() when the
+		# Python string goes out of scope.
+		self._lib.snes_library_id.restype = ctypes.c_char_p
+		self._lib.snes_library_id.argtypes = []
+
 		self._lib.snes_set_video_refresh.restype = None
 		self._lib.snes_set_video_refresh.argtypes = [video_refresh_cb_t]
 
@@ -130,15 +137,6 @@ class LowLevelWrapper(object):
 
 		self._lib.snes_get_memory_size.restype = ctypes.c_uint
 		self._lib.snes_get_memory_size.argtypes = [ctypes.c_uint]
-
-		self._lib.snes_library_id.restype = ctypes.c_char_p
-		self._lib.snes_library_id.argtypes = []
-
-		self._lib.snes_library_revision_major.restype = ctypes.c_uint
-		self._lib.snes_library_revision_major.argtypes = []
-
-		self._lib.snes_library_revision_minor.restype = ctypes.c_uint
-		self._lib.snes_library_revision_minor.argtypes = []
 
 		self._lib.snes_init.restype = None
 		self._lib.snes_init.argtypes = []

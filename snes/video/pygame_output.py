@@ -4,11 +4,8 @@ Pygame output for SNES Video.
 
 import pygame, ctypes
 
-def static_var(varname, value):
-    def decorate(func):
-        setattr(func, varname, value)
-        return func
-    return decorate
+convsurf = None
+subsurf = None
 
 def set_video_refresh_cb(core, callback):
 	"""
@@ -19,23 +16,25 @@ def set_video_refresh_cb(core, callback):
 		
 		"surf" is an instance of pygame.Surface containing the frame data.
 	"""
-	@static_var('convsurf', None)
-	@static_var('subsurf', None)
+
 	def wrapper(data, width, height, hires, interlace, overscan, pitch):
-		if wrapper.convsurf is None:
-			wrapper.convsurf = pygame.Surface(
+		global convsurf, subsurf
+		if convsurf is None:
+			convsurf = pygame.Surface(
 				(pitch, height), depth=15, masks=(0x7c00, 0x03e0, 0x001f, 0)
 			)
-			wrapper.subsurf = wrapper.convsurf.subsurface((0,0,width,height))
+			subsurf = convsurf.subsurface((0,0,width,height))
 
-		wrapper.convsurf.get_buffer().write(ctypes.string_at(data,pitch*height*2), 0)
-		surf = wrapper.subsurf
+		convsurf.get_buffer().write(ctypes.string_at(data,pitch*height*2), 0)
+		surf = subsurf
 
-		if hires:
+		if hires or interlace:
+			if hires:      width /= 2
+			if interlace:  height /= 2
 			try:
-				surf = pygame.transform.smoothscale(surf.convert(), (width/2,height))
+				surf = pygame.transform.smoothscale(surf.convert(), (width,height))
 			except:
-				surf = pygame.transform.scale(surf, (width/2,height))
+				surf = pygame.transform.scale(surf, (width,height))
 
 		callback(surf)
 

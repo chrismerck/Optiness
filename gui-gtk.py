@@ -11,26 +11,66 @@ import gtk
 import common
 
 from sys import maxint
-from os.path import exists
+import os
 
 # hack for some deprecated thinger in PyGTK 2.24 that isn't in 2.22
 if 'ComboBoxText' not in dir(gtk):  gtk.ComboBoxText = gtk.combo_box_new_text
 
+# quick utility function
+def is_iter(x):
+	try:
+		iterator = iter(x)
+	except TypeError:
+		return False
+	else:
+		return True
+
+
 class OptinessArgEntry(gtk.HBox):
-	def __init__(self, modpicker, key, val):
+	def __init__(self, modpicker, key, args, validators={}):
 		gtk.HBox.__init__(self, spacing=4)
+
+		val = args[key]
 
 		self.modpicker = modpicker
 		self.key = key
 		self.val = val
+		self.lastval = val
 		self.default = val
 
+		self.validator = None
+		if key in validators:
+			self.validator = validators[key]
+
 		self.label = gtk.Label( key )
-		self.label.set_justify(gtk.JUSTIFY_LEFT)
+		self.label.set_size_request(100,-1)
+		self.label.set_alignment(1.0, 0.5)
 
 		self.editor = None
 		self.type = type(val)
-		if self.type == bool:
+		if self.validator is not None:
+			if self.validator == os.path.isfile:
+				self.file = gtk.FileChooserButton(key)
+				self.file.set_filename(val)
+				self.file.connect('file-set', self.file_set_cb)
+				self.editor = self.file
+			elif is_iter(self.validator):
+				self.combo = gtk.ComboBoxText()
+				self.combo.connect('changed', self.combo_changed_cb)
+				index = 0
+				for i in self.validator:
+					self.combo.append_text(i)
+					if i == val:
+						self.combodefault = index
+						self.combo.set_active(index)
+					index += 1
+				self.editor = self.combo
+
+		if self.editor is not None:
+			# if we added it from the validator, do nothing here
+			# otherwise, add an appropriate widget for the variable type.
+			pass
+		elif self.type == bool:
 			self.check = gtk.ToggleButton(label=str(val))
 			self.check.set_active(val)
 			self.check.connect('clicked', self.check_clicked_cb)
@@ -44,11 +84,6 @@ class OptinessArgEntry(gtk.HBox):
 			self.spin.set_value(val)
 			self.spin.connect('value-changed', self.spin_changed_cb)
 			self.editor = self.spin
-		elif self.type == str and exists(val):
-			self.file = gtk.FileChooserButton(key)
-			self.file.set_filename(val)
-			self.file.connect('file-set', self.file_set_cb)
-			self.editor = self.file
 		else:
 			self.entry = gtk.Entry()
 			self.entry.set_text( str(val) )
@@ -60,11 +95,24 @@ class OptinessArgEntry(gtk.HBox):
 		self.reset.connect('clicked', self.reset_cb)
 
 		self.pack_start(self.label, expand=False)
-		self.pack_start(self.editor)
+		self.pack_start(self.editor, expand=True)
 		self.pack_start(self.reset, expand=False)
 
 	def update_modpicker(self):
-		self.modpicker.args[self.key] = self.val
+		evaluated = self.val
+		try:
+			evaluated = eval(self.val, {"__builtins__":None}, {})
+		except:
+			pass
+		if hasattr(self.validator, '__call__') and not self.validator(evaluated):
+			# restore last known good value
+			tmp = self.default
+			self.default = self.lastval
+			self.reset_cb(None)
+			self.default = tmp
+		else:
+			self.lastval = self.val
+			self.modpicker.args[self.key] = self.val
 
 	def check_clicked_cb(self, widget):
 		self.val = widget.get_active()
@@ -73,6 +121,10 @@ class OptinessArgEntry(gtk.HBox):
 
 	def spin_changed_cb(self, widget):
 		self.val = widget.get_value_as_int()
+		self.update_modpicker()
+
+	def combo_changed_cb(self, widget):
+		self.val = widget.get_active_text()
 		self.update_modpicker()
 
 	def file_set_cb(self, widget):
@@ -95,7 +147,9 @@ class OptinessArgEntry(gtk.HBox):
 			## because set_active, set_value, and set_text trigger their 'changed' callbacks.
 			self.val = self.default
 			self.update_modpicker()
-		else:
+		elif t == gtk.ComboBox:
+			self.combo.set_active(self.combodefault)
+		elif t == gtk.Entry:
 			self.entry.set_text( str(self.default) )
 
 
@@ -106,6 +160,7 @@ class OptinessModulePicker(gtk.VBox):
 
 		self.mod = None
 		self.args = {}
+		self.validators = {}
 
 		self.combo = gtk.ComboBoxText()
 		self.combo.connect('changed', self.changed_cb)
@@ -120,9 +175,9 @@ class OptinessModulePicker(gtk.VBox):
 			self.remove(i)
 
 		self.mod = widget.get_active_text()
-		self.args = common.util.GetArgs(self.mod)
+		self.args, self.validators = common.util.GetArgs(self.mod)
 		for i in self.args:
-			self.pack_start( OptinessArgEntry(self, i, self.args[i]), expand=False )
+			self.pack_start( OptinessArgEntry(self, i, self.args, self.validators), expand=False )
 
 		self.show_all()
 

@@ -1,0 +1,11 @@
+Hi.  This demo displays all 32,768 colors that the SNES can do.
+It does it on one screen. =)
+
+Ver 1}   6-27-2000 	Demo done
+
+
+Send comments or suggestions.
+
+Joshua Cain
+cainjs@iac.net
+irc: AppleGS / rAPPtar

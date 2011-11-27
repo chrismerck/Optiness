@@ -39,13 +39,8 @@ def set_video_refresh_cb(core, callback):
 		# Load our texture
 		glBindTexture(GL_TEXTURE_2D, texture)
 
-		# Copy the frame data from libsnes into a Python string.
-		frame_size = (pitch * 2) * height
-		frame_buf = ctypes.create_string_buffer(frame_size)
-		ctypes.memmove(frame_buf, data, frame_size)
-
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pitch, height, 0, GL_BGRA,
-				GL_UNSIGNED_SHORT_1_5_5_5_REV, frame_buf)
+				GL_UNSIGNED_SHORT_1_5_5_5_REV, data)
 
 		callback(texture, width, height, pitch, height)
 

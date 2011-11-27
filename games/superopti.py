@@ -1,12 +1,15 @@
 #!/usr/bin/env python2
 
+import sys, os
 import pygame
-import sys
 
+from common import util
 from skeleton_game import Game
 
 from snes import core as snes_core
-import snes.pad_drawing as pad_draw
+from snes.video import pygame_output as pgvid
+from snes.audio import pygame_output as pgaud
+from snes.audio import wave_output as waveaud
 
 from array import array
 from ctypes import string_at
@@ -15,18 +18,122 @@ defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'rom':       'data/smw.sfc',
 				'initstate': 'data/smw/smw_1-2.state9x',
 				'heuristic': 'smw',
-				'audio':     False,
+				'audio':     'none',
 				'granularity': 10,
 				'tweening':    0,
 				'inputmask': '>XA', # very limited for testing purposes
 				'screen':    (256, 224),
 				'padoverlay': True }
 
+validargs = { 'libsnes':     os.path.isfile,
+			  'rom':         os.path.isfile,
+			  'initstate':   os.path.isfile,
+			  'granularity': lambda x: x > 0,
+			  'tweening':    lambda x: x >= 0,
+			  'screen':      lambda x: type(x) is tuple and (len(x) == 2) and (x[0] > 0) and (x[1] > 0),
+			  'audio':       ['none', 'wave', 'pygame', 'array'],
+			  'heuristic':   list(util.ListModules('heuristics')) }
+
+class SnesPadDrawing:
+	def __init__(self, alpha=255, name='SUPER NES'):
+		bg = (200,200,200)
+		fg = (150,150,150)
+		black = (50,50,50)
+
+		ctrlr = pygame.Surface((250,110))
+		ctrlr.fill((0,0,0))
+		ctrlr.set_colorkey((0,0,0))
+		ctrlr.set_alpha(alpha)
+
+		pygame.font.init()
+		bold = pygame.font.Font(None,12)
+		bold.set_bold(True)
+		italic = pygame.font.Font(None,8)
+		italic.set_italic(True)
+		logo = pygame.font.Font(None,16)
+		logo.set_italic(True)
+		logo.set_underline(True)
+
+		#frame
+		pygame.draw.circle(ctrlr, bg, (55,55), 50)
+		pygame.draw.rect(ctrlr, bg, (55,5,140,90))
+		pygame.draw.circle(ctrlr, bg, (195,55), 50)
+		pygame.draw.circle(ctrlr, fg, (55,55), 25, 1)
+		pygame.draw.circle(ctrlr, fg, (195,55), 45)
+
+		#dpad center
+		pygame.draw.circle(ctrlr, black, (55,55), 7)
+
+		#bayx outlines
+		pygame.draw.line(ctrlr, bg, (195,74), (220,54), 21)
+		pygame.draw.circle(ctrlr, bg, (195,75), 10)
+		pygame.draw.circle(ctrlr, bg, (220,55), 10)
+		pygame.draw.line(ctrlr, bg, (172,54), (195,36), 21)
+		pygame.draw.circle(ctrlr, bg, (172,55), 10)
+		pygame.draw.circle(ctrlr, bg, (195,35), 10)
+
+		#text
+		ctrlr.blit(logo.render(name, True, black), (85,10))
+		ctrlr.blit(italic.render('SELECT', True, black), (94,75))
+		ctrlr.blit(italic.render('START', True, black), (122,75))
+		ctrlr.blit(bold.render('Y', True, bg), (155,65))
+		ctrlr.blit(bold.render('B', True, bg), (176,84))
+		ctrlr.blit(bold.render('X', True, bg), (209,21))
+		ctrlr.blit(bold.render('A', True, bg), (230,40))
+
+		self.frame = ctrlr
+
+	def Draw(self, pad):
+		B,Y,Se,St,Up,Down,Left,Right,A,X,L,R = [pad & (1<<i) for i in xrange(12)]
+
+		bg = (200,200,200)
+		fg = (150,150,150)
+		black = (50,50,50)
+
+		red = (100,0,150)
+		yellow = red
+		blue = (150,50,200)
+		green = blue
+		#red = (200,50,0)
+		#yellow = (250,200,0)
+		#blue = (0,0,200)
+		#green = (50,200,0)
+
+		ctrlr = self.frame.copy()
+
+		#dpad
+		if Up:    pygame.draw.rect(ctrlr, black, (47,35,15,20))
+		if Down:  pygame.draw.rect(ctrlr, black, (47,55,15,20))
+		if Left:  pygame.draw.rect(ctrlr, black, (35,47,20,15))
+		if Right: pygame.draw.rect(ctrlr, black, (55,47,20,15))
+
+		#select/start
+		if Se: pygame.draw.line(ctrlr, black, (100,67), (110,60), 10)
+		if St: pygame.draw.line(ctrlr, black, (125,67), (135,60), 10)
+
+		#ba
+		if B: pygame.draw.circle(ctrlr, yellow, (195,75), 8)
+		if A: pygame.draw.circle(ctrlr, red, (220,55), 8)
+
+		#yx
+		if Y: pygame.draw.circle(ctrlr, green, (172,55), 8)
+		if X: pygame.draw.circle(ctrlr, blue, (195,35), 8)
+
+		#lr
+		if L:
+			pygame.draw.lines(ctrlr, bg, True, ((30,9), (48,3), (80,3)), 2)
+			pygame.draw.lines(ctrlr, fg, False, ((30,11), (48,5), (80,5)), 1)
+		if R:
+			pygame.draw.lines(ctrlr, bg, True, ((168,3), (200,3), (220,9)), 2)
+			pygame.draw.lines(ctrlr, fg, False, ((168,5), (200,5), (220,11)), 1)
+
+		return ctrlr
+
 class SuperOpti(Game):
 	name = 'superopti'
 
 	def __init__(self, args = {}):
-		Game.__init__(self, args, defaultargs)
+		Game.__init__(self, args, defaultargs, validargs)
 		self.GenerateValidInputs(args['inputmask'])
 
 		# load the libsnes core and feed the emulator a ROM
@@ -41,14 +148,17 @@ class SuperOpti(Game):
 			except IOError: pass
 
 		# register drawing and input-reading callbacks
-		self.emu.set_video_refresh_cb(self._video_refresh_cb)
+		pgvid.set_video_refresh_cb(self.emu, self._video_refresh_cb)
 		self.emu.set_input_state_cb(self._input_state_cb)
 
 		# unplug player 2 controller so we don't get twice as many input state callbacks
 		self.emu.set_controller_port_device(snes_core.PORT_2, snes_core.DEVICE_NONE)
 
 		# only bother with the overhead of audio if it's requested
-		if self.args['audio']:  self.emu.set_audio_sample_cb(self._audio_sample_cb)
+		audtype = self.args['audio']
+		if audtype == 'wave':      waveaud.set_audio_sink(self.emu, 'superopti.wav')
+		elif audtype == 'pygame':  pgaud.set_audio_sample_cb(self.emu)
+		elif audtype == 'array':   self.emu.set_audio_sample_cb(self._audio_sample_cb)
 
 		# don't put anything in the work ram and framebuffer until the emulator can
 		self.wram = None
@@ -73,7 +183,7 @@ class SuperOpti(Game):
 		# showing what buttons are active
 		self.padoverlay = None
 		if self.args['padoverlay']:
-			self.padoverlay = pad_draw.makeframe()
+			self.padoverlay = SnesPadDrawing(name='SUPEROPTI')
 
 	def HumanInputs(self):
 		return { 'hat0_up':    0b000000010000,
@@ -114,10 +224,8 @@ class SuperOpti(Game):
 
 		print 'SuperOpti: generated', len(self.valid_inputs), 'valid inputs'
 
-	def _video_refresh_cb(self, data, width, height, hires, interlace, overscan, pitch):
-		if self.snesfb is None:
-			self.snesfb = pygame.Surface((pitch, height), depth=15, masks=(0x7c00, 0x03e0, 0x001f, 0))
-		self.snesfb.get_buffer().write(string_at(data,pitch*height*2), 0)
+	def _video_refresh_cb(self, surf):
+		self.snesfb = surf
 
 	def _input_state_cb(self, port, device, index, id):
 		if port or not(0 <= id < 12): return False # player2 or undefined button
@@ -155,14 +263,14 @@ class SuperOpti(Game):
 	# only convert the screen from 16-bit format to RGB888 when we need it
 	def Draw(self):
 		# if we don't have something to draw, or if there's no point in drawing it
-		if self.snesfb is None: #or not pygame.display.get_active():
+		if self.snesfb is None or not pygame.display.get_active():
 			return None
 
 		game_img = self.snesfb
 
 		# draw the gamepad underneath if enabled
 		if self.padoverlay is not None:
-			pad_img = pad_draw.drawbuttons(self.padoverlay, self.pad)
+			pad_img = self.padoverlay.Draw(self.pad)
 			joined = pygame.Surface(self.ScreenSize())
 			joined.blit(game_img, (0,0))
 			joined.blit(pad_img, (3, game_img.get_height()))
@@ -214,7 +322,9 @@ class SuperOpti(Game):
 	def ScreenSize(self):
 		w,h = self.args['screen']
 		if self.padoverlay is not None:
-			return (w, h+self.padoverlay.get_height())
+			return (w, h+self.padoverlay.frame.get_height())
 		return (w,h)
+
+
 
 LoadedGame = SuperOpti

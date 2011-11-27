@@ -6,17 +6,21 @@ Darren Alton
 """
 
 import pygame, cPickle
-import wave
+import os, wave
 from array import array
 
 from skeleton_solver import Brain
 
-defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
-				'file': 'output/last_run.pickle',
-				'granularity': 1, # mostly for converting SuperOpti runs to 60fps
-				'force': False,
+defaultargs = { 'fps':         60, # run at 60fps because we have a human watching
+				'file':        'output/last_run.pickle',
+				'granularity': 1,  # mostly for converting SuperOpti runs to 60fps
+				'force':       False,
 				'recordvideo': False,
 				'recordaudio': False }
+
+validargs = { 'fps':         lambda x: x >= 0,
+			  'file':        os.path.isfile,
+			  'granularity': lambda x: x > 0 }
 
 class Rerun(Brain):
 	name = 'rerun'
@@ -70,7 +74,7 @@ class Rerun(Brain):
 														self.game.__class__.name,
 														len(self.outputstring) ) )
 			if self.recordaudio:
-				self.wav.writeframes(array('H', self.game.Sound()).tostring())
+				self.wav.writeframesraw(array('H', self.game.Sound()).tostring())
 				if self.Victory() and i == self.granularity-1:
 					self.wav.close()
 

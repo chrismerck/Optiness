@@ -15,17 +15,40 @@ ymax = 200 # fallback height of the screen
 class Game:
 	name = 'unnamed game'
 
-	def __init__(self, args={}, defaultargs={}):
+	def __init__(self, args={}, defaultargs={}, validargs={}):
 		# try to convert args to appropriate types (from str)
 		for i in args:
 			try:
 				args[i] = eval(args[i], {"__builtins__":None}, {})
 			except:
 				pass
+
 		# load default values for any keys not given
 		for i in defaultargs:
 			if i not in args:
 				args[i] = defaultargs[i]
+
+		# check validargs
+		invalids = []
+		for i in args:
+			if i in validargs:
+				validator = validargs[i]
+				try:
+					iterator = iter(validator)
+				except TypeError:
+					if hasattr(validator, '__call__'):
+						if not validator(args[i]):
+							invalids.append(i)
+				else:
+					if args[i] not in validator:
+						print validator
+						invalids.append(i)
+		if len(invalids):
+			for i in invalids:
+				print 'invalid value for {}: {}'.format(i, args[i])
+			raise Exception('bad arguments provided to game.')
+
+		# otherwise, we're all good...
 		self.args = args
 
 	# return a copy of the "screen" for visualization

@@ -23,12 +23,14 @@ wall = 1
 defaultargs = {	'seed':   1,
 				'screen': (100, 80) }
 
+validargs = { 'screen':  lambda x: (len(x) == 2) and (x[0] > 0) and (x[1] > 0) }
+
 # Maze game
 class Maze(Game):
 	name = 'maze'
 
 	def __init__(self, args = {}):
-		Game.__init__(self, args, defaultargs)
+		Game.__init__(self, args, defaultargs, validargs)
 		if 'seed' in self.args:  random.seed(self.args['seed'])  # God does not play dice
 
 		self.inputs = { 'hat0_up':    0b0001,
