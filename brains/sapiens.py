@@ -13,7 +13,7 @@ pygame.joystick.init()     # hack to allow argument validation
 joylist = [pygame.joystick.Joystick(i).get_name() for i in xrange(pygame.joystick.get_count())]
 
 defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
-                'joynum': 0,
+                'joynum': joylist[0],
 				'keyhat': 'wsad',
 				'keybuttons': 'klji1056' }
 
