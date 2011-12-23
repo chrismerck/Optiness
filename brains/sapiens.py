@@ -10,14 +10,16 @@ import pygame
 from skeleton_solver import Brain
 
 pygame.joystick.init()     # hack to allow argument validation
+joylist = [pygame.joystick.Joystick(i).get_name() for i in xrange(pygame.joystick.get_count())]
 
 defaultargs = { 'fps': 60, # run at 60fps because we have a human watching
                 'joynum': 0,
 				'keyhat': 'wsad',
 				'keybuttons': 'klji1056' }
 
-validargs = { 'fps':         lambda x: x >= 0,
-			  'joynum':      lambda x: x == 0 or (x > 0 and x < pygame.joystick.get_count()) }
+validargs = { 'fps':     lambda x: x >= 0,
+			  'joynum':  joylist }
+			  #lambda x: x == 0 or (x > 0 and x < pygame.joystick.get_count()) }
 
 class Sapiens(Brain):
 	name = 'sapiens'
@@ -29,6 +31,8 @@ class Sapiens(Brain):
 		self.clock = pygame.time.Clock()
 
 		joynum = self.args['joynum']
+		if type(joynum) == str:
+			joynum = joylist.index(joynum)
 		if joynum >= 0:
 			self.joy = pygame.joystick.Joystick(joynum)
 			self.joy.init()
@@ -44,8 +48,8 @@ class Sapiens(Brain):
 		map = self.input_map
 		self.hat_reset = 0
 		for i in UDLR:
-			str = 'hat0_{}'.format(i)
-			if str in map:  self.hat_reset |= map[str]
+			s = 'hat0_{}'.format(i)
+			if s in map:  self.hat_reset |= map[s]
 		self.hat_reset = ~self.hat_reset
 		self.hat_lut = [ { -1: 'left', 1:  'right' },
 			             { 1:  'up',   -1: 'down' } ]
@@ -53,8 +57,8 @@ class Sapiens(Brain):
 		self.key_map = {}
 		keyhat = self.args['keyhat']
 		for i in xrange(len(keyhat)):
-			str = 'hat0_{}'.format(UDLR[i])
-			self.key_map[ord(keyhat[i])] = map[str]
+			s = 'hat0_{}'.format(UDLR[i])
+			self.key_map[ord(keyhat[i])] = map[s]
 		keybuttons = self.args['keybuttons']
 		for i in xrange(len(keybuttons)):
 			self.key_map[ord(keybuttons[i])] = map[i]
