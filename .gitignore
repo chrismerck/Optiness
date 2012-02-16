@@ -1,2 +1,5 @@
 *.dll
+*.pyc
+*.sfc
 data/*
+output/*
