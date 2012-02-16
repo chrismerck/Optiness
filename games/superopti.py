@@ -14,6 +14,14 @@ from snes.audio import wave_output as waveaud
 from array import array
 from ctypes import string_at
 
+# for argument validation
+def has_repeats(s):
+	if len(s) > 1:
+		if s[0] in s[1:]:
+			return True
+		return has_repeats(s[1:])
+	return False
+
 defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'rom':       'data/smw.sfc',
 				'initstate': 'data/smw/smw_1-2.state9x',
@@ -30,6 +38,7 @@ validargs = { 'libsnes':     os.path.isfile,
 			  'initstate':   os.path.isfile,
 			  'granularity': lambda x: x > 0,
 			  'tweening':    lambda x: x >= 0,
+			  'inputmask':   lambda x: set(x).issubset('BY?!^v<>AXLR') and not has_repeats(x),
 			  'screen':      lambda x: type(x) is tuple and (len(x) == 2) and (x[0] > 0) and (x[1] > 0),
 			  'audio':       ['none', 'wave', 'pygame', 'array'],
 			  'heuristic':   list(util.ListModules('heuristics')) }
