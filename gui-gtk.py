@@ -28,7 +28,7 @@ def is_iter(x):
 
 class OptinessArgEntry(gtk.HBox):
 	def __init__(self, modpicker, key, args, validators={}):
-		gtk.HBox.__init__(self, spacing=4)
+		gtk.HBox.__init__(self, spacing=8)
 
 		val = args[key]
 
@@ -80,14 +80,12 @@ class OptinessArgEntry(gtk.HBox):
 			self.spin.set_numeric(True)
 			self.spin.set_range(-maxint, maxint)
 			self.spin.set_increments(1,10)
-			self.spin.set_alignment(1)
 			self.spin.set_value(val)
 			self.spin.connect('value-changed', self.spin_changed_cb)
 			self.editor = self.spin
 		else:
 			self.entry = gtk.Entry()
 			self.entry.set_text( str(val) )
-			self.entry.set_alignment(1)
 			self.entry.connect('changed', self.entry_changed_cb)
 			self.editor = self.entry
 
@@ -200,7 +198,7 @@ class OptinessGUI(gtk.Window):
 		hbox_output.pack_start(gtk.Label('output'), expand=False)
 		hbox_output.pack_start(self.savefile)
 
-		hbox = gtk.HBox(spacing=16)
+		hbox = gtk.HBox(spacing=16, homogeneous=True)
 		hbox.add(self.game_picker)
 		hbox.add(self.brain_picker)
 
