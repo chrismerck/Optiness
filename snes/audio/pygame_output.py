@@ -15,10 +15,12 @@ def set_audio_sample_cb(core, callback=pygame.mixer.Sound.play):
 
 	Unlike core.EmulatedSNES.set_audio_sample_cb, the callback passed to this
 	function should accept only one parameter:
-		
-		"snd" is an instance of pygame.mixer.Sound containing the last 512 samples.
-	
-	If no callback function is provided, the default implementation of snd.play() is used.
+
+		"snd" is an instance of pygame.mixer.Sound containing the last 512
+		samples.
+
+	If no callback function is provided, the default implementation of
+	snd.play() is used.
 	"""
 
 	# init pygame sound.  snes freq is 32000, 16bit unsigned stereo.
@@ -27,7 +29,9 @@ def set_audio_sample_cb(core, callback=pygame.mixer.Sound.play):
 		size=16, channels=2, buffer=512
 	)
 
-	snd = pygame.sndarray.make_sound( numpy.zeros( (512, 2), dtype='uint16', order='C' ) )
+	snd = pygame.sndarray.make_sound(
+			numpy.zeros( (512, 2), dtype='uint16', order='C' )
+		)
 	sndbuf = snd.get_buffer()
 
 	def wrapper(left, right):

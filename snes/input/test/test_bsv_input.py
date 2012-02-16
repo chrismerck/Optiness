@@ -65,6 +65,24 @@ class TestBSVDecode(unittest.TestCase):
 
 		self.assertEqual(firstRecord, 0)
 
+	def test_ssnes_bsv_files(self):
+		"""
+		bsv_decode can read BSV files with a reversed magic number.
+
+		These files are created by SSNES, based on poorly-worded file-format
+		documentation. Future versions of SSNES should get it right.
+		"""
+		bsvPath = os.path.join(TESTDIR,
+				"smw2yi_ssnes-0.9_bsnes-compat-082.bsv")
+
+		generator = bsv_input.bsv_decode(bsvPath)
+
+		(serializerVersion, cartCRC, saveStateData) = generator.next()
+
+		self.assertEqual(serializerVersion, 0)
+		self.assertEqual(cartCRC, 0xd138f224)
+		self.assertEqual(len(saveStateData), 409233)
+
 
 if __name__ == "__main__":
 	unittest.main()

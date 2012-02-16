@@ -6,7 +6,12 @@ from struct import Struct, error as StructError
 
 BSV_MAGIC = 'BSV1'
 HEADER_STRUCT = Struct('<4s3I')
-RECORD_STRUCT = Struct('<H')
+RECORD_STRUCT = Struct('<h')
+
+# Due to poorly-worded documentation, some versions of SSNES produce BSV files
+# with the magic number reversed. Such files are otherwise fine, so we'll
+# accept them.
+BSV_SSNES_MAGIC = '1VSB'
 
 
 class CorruptFile(Exception): pass
@@ -41,7 +46,7 @@ def bsv_decode(filenameOrHandle):
 	magic, serializerVersion, cartCRC, stateSize = \
 			_extract(HEADER_STRUCT, handle)
 
-	if magic != BSV_MAGIC:
+	if magic not in (BSV_MAGIC, BSV_SSNES_MAGIC):
 		raise CorruptFile("File %r has bad magic %r, expected %r"
 				% (filenameOrHandle, magic, BSV_MAGIC))
 

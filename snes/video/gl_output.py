@@ -36,13 +36,22 @@ def set_video_refresh_cb(core, callback):
 	glBindTexture(GL_TEXTURE_2D, texture)
 
 	def wrapper(data, width, height, hires, interlace, overscan, pitch):
+		# Extract the pixel data we want into a framebuffer.
+		frame_buf = ctypes.create_string_buffer(width * height * 2)
+		for y in xrange(height):
+			ctypes.memmove(
+					ctypes.addressof(frame_buf)     + (y * width * 2),
+					ctypes.addressof(data.contents) + (y * pitch * 2),
+					width * 2,
+				)
+
 		# Load our texture
 		glBindTexture(GL_TEXTURE_2D, texture)
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pitch, height, 0, GL_BGRA,
-				GL_UNSIGNED_SHORT_1_5_5_5_REV, data)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA,
+				GL_UNSIGNED_SHORT_1_5_5_5_REV, frame_buf)
 
-		callback(texture, width, height, pitch, height)
+		callback(texture, width, height, width, height)
 
 	core.set_video_refresh_cb(wrapper)
 
