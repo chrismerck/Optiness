@@ -4,24 +4,16 @@ import sys, getopt, ctypes, struct
 import pygame, numpy
 
 from snes import core as snes_core
-
+from snes.video import pygame_output as pgvid
+from snes.audio import pygame_output as pgaud
 
 
 # libsnes library to use by default.
-libsnes = '/usr/lib/libsnes-compatibility.so'
+libsnes = '/usr/lib/libsnes/libsnes-compat.so'
 if sys.platform == 'win32':  libsnes = 'snes.dll'
 
 # frameskip
 screen = None
-convsurf = None
-video_frameskip = 0
-video_frameskip_idx = 0
-
-# sound buffer initialization and details.
-soundbuf_size = 512
-soundbuf_raw = ''
-soundbuf_buf = None
-soundbuf_playing = False
 
 # joypad: xinput (x360) layout by default.
 #             BYet^v<>AXLR
@@ -42,14 +34,6 @@ Usage:
    Specify the dynamically linked LibSNES library to use.
    If unspecified, {} is used by default.
 
-  -f, --frameskip
-   Specify a number of video frames to skip rendering (integer)
-   Default value is {}.
-
-  -s, --soundbuf
-   Specify a size (in samples) of the sound buffer to use.
-   Default value is {}.
-
   -j, --joymap
    Specify a mapping of SNES inputs to PC joypad buttons.
    This must be a string of 12 characters, specifying which
@@ -66,13 +50,13 @@ Usage:
   save.srm
    The SRAM to load (optional).  Must be specified after the ROM.
    Warning: Won't be updated or overwritten during or after emulation.
-""".format(sys.argv[0], libsnes, video_frameskip, soundbuf_size, joymap_arg)
+""".format(sys.argv[0], libsnes, joymap_arg)
 
 
 
 # parse arguments
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hl:f:s:j:", ["help", "libsnes=", "frameskip=", "soundbuf=", "joymap="])
+	opts, args = getopt.getopt(sys.argv[1:], "hl:f:s:j:", ["help", "libsnes=", "joymap="])
 	if len(args) < 1:
 		raise getopt.GetoptError('Must specify one ROM argument.')
 	for o,a in opts:
@@ -81,10 +65,6 @@ try:
 			exit(0)
 		elif o in ('-l', '--libsnes'):
 			libsnes = a
-		elif o in ('-f', '--frameskip'):
-			video_frameskip = int(a)
-		elif o in ('-s', '--soundbuf'):
-			soundbuf_size = int(a)
 		elif o in ('-j', '--joymap'):
 			if len(a) != 12:
 				raise getopt.GetoptError('--joymap must specify a string of length 12.')
@@ -95,39 +75,16 @@ except Exception, e:
 
 
 
-# callback functions...
-def video_refresh(data, width, height, hires, interlace, overscan, pitch):
-	global video_frameskip, video_frameskip_idx, convsurf, screen
-	video_frameskip_idx += 1
+def paint_frame(surf):
+	global screen, start
 
-	# init pygame display here, once we know the width and height.
 	if screen is None:
-		if hires:  width /= 2
-		screen = pygame.display.set_mode((width,height))
+		screen = pygame.display.set_mode(surf.get_size())
 
-	if video_frameskip_idx > video_frameskip:
-		video_frameskip_idx = 0
-		# make a surface with the SNES's pixel format, so pygame automatically converts
-		if convsurf is None:
-			convsurf = pygame.Surface(
-				(pitch, height), depth=15, masks=(0x7c00, 0x03e0, 0x001f, 0)
-			)
-		convsurf.get_buffer().write(ctypes.string_at(data,pitch*height*2), 0)
-		if hires:
-			screen.blit(pygame.transform.scale(convsurf, (pitch/2,height)), (0,0))
-		else:
-			screen.blit(convsurf, (0,0))
-		pygame.display.flip()
+	screen.blit(surf, (0,0))
+	pygame.display.flip()
 
-def audio_sample(left, right):
-	global soundbuf, soundbuf_buf, soundbuf_raw, soundbuf_playing
-	soundbuf_raw += struct.pack('<HH', left, right)
-	if not soundbuf_playing:
-		soundbuf_playing = True
-		soundbuf.play(loops=-1)
-	if len(soundbuf_raw) >= soundbuf_buf.length:
-		soundbuf_buf.write(soundbuf_raw, 0)
-		soundbuf_raw = ''
+
 
 def input_state(port, device, index, id):
 	global joymap
@@ -161,11 +118,6 @@ for i in xrange(12):
 
 
 
-# init pygame sound.  snes freq is 32000, 16bit unsigned stereo.
-pygame.mixer.init(frequency=32000, size=16, channels=2, buffer=soundbuf_size)
-soundbuf = pygame.sndarray.make_sound(numpy.zeros( (soundbuf_size,2), dtype='uint16', order='C' ))
-soundbuf_buf = soundbuf.get_buffer()
-
 # init pygame joypad input
 pygame.joystick.init()
 joypad = pygame.joystick.Joystick(0)
@@ -186,8 +138,8 @@ emu = snes_core.EmulatedSNES(libsnes)
 emu.load_cartridge_normal(rom, sram)
 
 # register callbacks
-emu.set_video_refresh_cb(video_refresh)
-emu.set_audio_sample_cb(audio_sample)
+pgvid.set_video_refresh_cb(emu, paint_frame)
+pgaud.set_audio_sample_cb(emu)
 emu.set_input_state_cb(input_state)
 
 # unplug player 2 controller so we don't get twice as many input state callbacks
@@ -206,3 +158,4 @@ while running:
 				open('emu.state', 'wb').write(emu.serialize())
 			elif event.key == pygame.K_F4:
 				emu.unserialize(open('emu.state', 'rb').read())
+
