@@ -1,6 +1,7 @@
 """
 Pygame output for SNES Video.
 """
+
 import pygame, ctypes
 
 OUTPUT_WIDTH=256
@@ -22,7 +23,13 @@ def set_video_refresh_cb(core, callback):
 		)
 		surf = convsurf.subsurface((0,0,width,height))
 
-		convsurf.get_buffer().write(ctypes.string_at(data,pitch*height*2), 0)
+		# this try-except block works around a bug in pygame 1.9.1 on 64-bit hosts.
+		# http://archives.seul.org/pygame/users/Apr-2011/msg00069.html
+		# https://bitbucket.org/pygame/pygame/issue/109/bufferproxy-indexerror-exception-thrown
+		try:
+			convsurf.get_buffer().write(ctypes.string_at(data,pitch*height*2), 0)
+		except IndexError:
+			return
 
 		tryScale = False
 
@@ -45,3 +52,4 @@ def set_video_refresh_cb(core, callback):
 		callback(surf)
 
 	core.set_video_refresh_cb(wrapper)
+
