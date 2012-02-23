@@ -42,7 +42,7 @@ class Rerun(Brain):
 			self.wav = wave.open('output/{}_{}.wav'.format(self.__class__.name, self.game.__class__.name), 'wb')
 			self.wav.setnchannels(2)
 			self.wav.setsampwidth(2)
-			self.wav.setframerate(32000)
+			self.wav.setframerate(32040)
 
 		# describe the run
 		print 'replaying a run of:\t', loadedfile['game'], '\t', loadedfile['game_args']
@@ -50,8 +50,31 @@ class Rerun(Brain):
 		if not self.force:
 			if loadedfile['game'] != game.__class__.name:
 				raise Exception('loaded input string is for "%s"' % (loadedfile['game']))
-			if loadedfile['game_args'] != game.args:
-				raise Exception('game_args mismatch:\n%s\n%s' % (loadedfile['game_args'], game.args))
+
+			special_cases = ['granularity', 'audio']
+			mismatches = []
+			for key in game.args:
+				if key not in special_cases:
+					# note: old args being dropped are implicitly ignored by this loop.
+					# explicitly ignore new features with this conditional.
+					if key in loadedfile['game_args'] and loadedfile['game_args'][key] != game.args[key]:
+						mismatches.append(key)
+				else:
+					if key == 'granularity':
+						then = loadedfile['game_args'][key]
+						if key in loadedfile['brain_args']:
+							then *= loadedfile['brain_args'][key]
+						now = game.args[key]*self.args[key]
+						if then != now:
+							print 'rerun: granularity mismatch! consider adjusting rerun\'s granularity.'
+							mismatches.append(key)
+					elif key == 'audio':
+						print 'rerun: be sure to use "array" for the game audio if you want to use rerun\'s sound recording.'
+			if len(mismatches) > 0:
+				for key in mismatches:
+					print key, '\n\tgame:', game.args[key],
+					print '\n\tfile:', loadedfile['game_args'][key]
+				raise Exception('game_args mismatch')
 
 		self.inputstring = loadedfile['path']
 		self.outputstring = []
@@ -71,8 +94,8 @@ class Rerun(Brain):
 			if self.recordvideo:
 				pygame.image.save( surf,
 								   'output/%s_%s_%04d.png' % ( self.__class__.name,
-														self.game.__class__.name,
-														len(self.outputstring) ) )
+				                                               self.game.__class__.name,
+				                                               len(self.outputstring) ) )
 			if self.recordaudio:
 				self.wav.writeframesraw(array('H', self.game.Sound()).tostring())
 				if self.Victory() and i == self.granularity-1:
