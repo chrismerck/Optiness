@@ -38,9 +38,9 @@ class Wario(Brain):
 		self.escapemethod = self.args['escapemethod']
 		self.repeathistory = self.args['repeathistory']
 		self.motionblur = self.args['motionblur']
-
 		self.input_log = []
 		self.history = []
+		self.deuxiemevue_buffer = []
 
 		self.best_state = self.game.Freeze()
 		self.best_heur = self.game.Heuristic()
