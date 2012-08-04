@@ -1,4 +1,3 @@
-They are called computers simply because computation is the only significant
-job that has so far been given to them.
+Warning!  This project is currently broken; the code that relies on 'libsnes' must be changed to use 'libretro' instead.
 
 https://github.com/chrismerck/Optiness/wiki
