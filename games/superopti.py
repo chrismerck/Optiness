@@ -6,10 +6,20 @@ import pygame
 from common import util
 from skeleton_game import Game
 
-from snes import core as snes_core
-from snes.video import pygame_output as pgvid
-from snes.audio import pygame_output as pgaud
-from snes.audio import wave_output as waveaud
+try:
+	import cy_retro as retro
+except ImportError:
+	try:
+		import py_retro as retro
+	except ImportError:
+		print 'please put either cy_retro or py_retro into the Optiness dir.',
+		print 'https://github.com/lifning/python-retro'
+		raise ImportError
+
+core = retro.core
+pgvid = retro.pygame_video
+pgaud = retro.pygame_audio
+siminp = retro.simple_input
 
 from array import array
 from ctypes import string_at
@@ -22,26 +32,24 @@ def has_repeats(s):
 		return has_repeats(s[1:])
 	return False
 
-defaultargs = {	'libsnes':   'data/snes9x.dll',
+defaultargs = {	'libretro':  'data/snes9x.dll',
 				'rom':       'data/smw.sfc',
 				'initstate': 'data/smw/smw_1-2.state9x',
 				'heuristic': 'smw',
 				'video':     True,
 				'audio':     'none',
-				'granularity': 10,
+				'granularity': 1,
 				'tweening':    0,
 				'inputmask': '>XA', # very limited for testing purposes
-				'screen':    (256, 224),
 				'padoverlay': True }
 
-validargs = { 'libsnes':     os.path.isfile,
+validargs = { 'libretro':    os.path.isfile,
 			  'rom':         os.path.isfile,
 			  'initstate':   os.path.isfile,
 			  'granularity': lambda x: x > 0,
 			  'tweening':    lambda x: x >= 0,
 			  'inputmask':   lambda x: set(x).issubset('BY?!^v<>AXLR') and not has_repeats(x),
-			  'screen':      lambda x: type(x) is tuple and (len(x) == 2) and (x[0] > 0) and (x[1] > 0),
-			  'audio':       ['none', 'wave', 'pygame', 'array'],
+			  'audio':       ['none', 'pygame'], # 'wave' and 'array' currently unsupported by cy_retro
 			  'heuristic':   list(util.ListModules('heuristics')) }
 
 class SnesPadDrawing:
@@ -146,8 +154,8 @@ class SuperOpti(Game):
 		Game.__init__(self, args, defaultargs, validargs)
 		self.GenerateValidInputs(args['inputmask'])
 
-		# load the libsnes core and feed the emulator a ROM
-		self.emu = snes_core.EmulatedSNES(args['libsnes'])
+		# load the libretro core and feed the emulator a ROM
+		self.emu = core.EmulatedSNES(args['libretro'])
 		self.emu.load_cartridge_normal(open(args['rom'], 'rb').read())
 
 		# load a starting state if one was provided
@@ -158,23 +166,25 @@ class SuperOpti(Game):
 			except IOError: pass
 
 		# register drawing and input-reading callbacks
+		self.snesfb = None
 		if self.args['video']:
-			pgvid.set_video_refresh_cb(self.emu, self._video_refresh_cb)
-		self.emu.set_input_state_cb(self._input_state_cb)
+			self.snesfb = pygame.Surface(self.emu.get_av_info()['base_size'])
+			pgvid.set_video_refresh_surface(self.emu, self.snesfb)
+		siminp.set_input_internal(self.emu)
 
 		# unplug player 2 controller so we don't get twice as many input state callbacks
-		self.emu.set_controller_port_device(snes_core.PORT_2, snes_core.DEVICE_NONE)
+		self.emu.set_controller_port_device(1, retro.DEVICE_NONE)
 
 		# only bother with the overhead of audio if it's requested
 		audtype = self.args['audio']
-		if audtype == 'wave':      waveaud.set_audio_sink(self.emu, 'superopti.wav')
-		elif audtype == 'pygame':  pgaud.set_audio_sample_cb(self.emu)
-		elif audtype == 'array':   self.emu.set_audio_sample_cb(self._audio_sample_cb)
+		#if audtype == 'wave':     waveaud.set_audio_sink(self.emu, 'superopti.wav')
+		if audtype == 'pygame':   pgaud.set_audio_sample_internal(self.emu)
+		elif audtype == 'array':  self.emu.set_audio_sample_cb(self._audio_sample_cb)
 
-		# don't put anything in the work ram and framebuffer until the emulator can
+		# don't put anything in the work ram until the emulator can
 		self.wram = None
-		self.snesfb = None
 		self.soundbuf = array('H', [])
+		self.pad = 0
 
 		self._Heuristic = None
 		try:
@@ -235,13 +245,6 @@ class SuperOpti(Game):
 
 		print 'SuperOpti: generated', len(self.valid_inputs), 'valid inputs'
 
-	def _video_refresh_cb(self, surf):
-		self.snesfb = surf
-
-	def _input_state_cb(self, port, device, index, id):
-		if port or not(0 <= id < 12): return False # player2 or undefined button
-		return bool(self.pad & (1 << id))
-
 	def _audio_sample_cb(self, left, right):
 		self.soundbuf += array('H', (left,right))
 
@@ -269,7 +272,7 @@ class SuperOpti(Game):
 				self.keyframe = state
 				self.inputs_since_keyframe = []
 
-		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
+		self.wram = self.emu._memory_to_string(core.MEMORY_WRAM)
 
 	# only convert the screen from 16-bit format to RGB888 when we need it
 	def Draw(self):
@@ -290,12 +293,12 @@ class SuperOpti(Game):
 		return game_img
 
 	def Input(self, pad):
-		# update the internal pad state that will be checked with libsnes' callbacks
+		# update the internal pad state that will be checked with libretro' callbacks
 		self.pad = pad
+		siminp.set_state_digital(0, pad)
 
 		# run for the specified number of frames on that pad state
-		for i in xrange(self.granularity):
-			self.emu.run()
+		self.emu.run(self.granularity)
 
 		# do keyframe/tweening if relevant
 		if self.tweening:
@@ -306,7 +309,7 @@ class SuperOpti(Game):
 				self.inputs_since_keyframe.append(pad)
 
 		# fetch the work RAM (for heuristics to access)
-		self.wram = self.emu._memory_to_string(snes_core.MEMORY_WRAM)
+		self.wram = self.emu._memory_to_string(retro.MEMORY_WRAM)
 		if self.wram is None:
 			print 'SuperOpti: error retrieving RAM'
 
@@ -331,7 +334,8 @@ class SuperOpti(Game):
 		return tmp
 
 	def ScreenSize(self):
-		w,h = self.args['screen']
+		#w,h = self.args['screen']
+		w,h = self.snesfb.get_size()
 		if self.padoverlay is not None:
 			return (w, h+self.padoverlay.frame.get_height())
 		return (w,h)

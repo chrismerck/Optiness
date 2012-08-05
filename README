@@ -1,3 +1,8 @@
-Warning!  This project is currently broken; the code that relies on 'libsnes' must be changed to use 'libretro' instead.
+The Optiness Project: Modeling retro games as implicit graphs since 2011.
 
+Please see the documentation on the project's wiki:
 https://github.com/chrismerck/Optiness/wiki
+
+Note that there are currently some issues related to the recent API switch from
+libsnes to libretro, but basic functionality should be back now.
+
