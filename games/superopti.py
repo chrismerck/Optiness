@@ -26,6 +26,7 @@ defaultargs = {	'libsnes':   'data/snes9x.dll',
 				'rom':       'data/smw.sfc',
 				'initstate': 'data/smw/smw_1-2.state9x',
 				'heuristic': 'smw',
+				'video':     True,
 				'audio':     'none',
 				'granularity': 10,
 				'tweening':    0,
@@ -157,7 +158,8 @@ class SuperOpti(Game):
 			except IOError: pass
 
 		# register drawing and input-reading callbacks
-		pgvid.set_video_refresh_cb(self.emu, self._video_refresh_cb)
+		if self.args['video']:
+			pgvid.set_video_refresh_cb(self.emu, self._video_refresh_cb)
 		self.emu.set_input_state_cb(self._input_state_cb)
 
 		# unplug player 2 controller so we don't get twice as many input state callbacks
