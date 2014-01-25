@@ -11,8 +11,15 @@ from skeleton_game import Game
 
 import pygame
 
-defaultargs = { 'output': 'foo' }
-validargs =   { 'output': lambda x: type(x) is str }
+defaultargs = { 'output':        'foo',
+                'max_loop':      1000,
+                'bits_per_cell': 8, }
+
+validargs =   { 'output':        lambda x: type(x) is str,
+                'max_loop':      lambda x: type(x) is int and x > 0,
+                'bits_per_cell': lambda x: type(x) is int and 0 < x <= 64 }
+
+class InfiniteLoopException(Exception): pass
 
 class Brainfuck(Game):
     name = 'brainfuck'
@@ -23,6 +30,8 @@ class Brainfuck(Game):
         self.program = ''
         self.current_output = ''
         self.desired_output = self.args['output']
+        self.iter_max = self.args['max_loop']
+        self.bit_mask = (1 << self.args['bits_per_cell']) - 1
 
         # , is omitted because it could just produce a BF implementation of cat
         self.inputs = { 'hat0_up':    '+',
@@ -44,9 +53,8 @@ class Brainfuck(Game):
 
         try:
             output = self.InterpretBF(self.program)
-        except: # runtime errors are obviously dead ends~
-            print self.program
-            return float('inf')
+        except Exception, e:
+            output = e.message
 
         # if we've gone too far, dead end
         if len(output) > len(self.desired_output):
@@ -98,13 +106,14 @@ class Brainfuck(Game):
                 return subprog[:i]
         if has_nonbracket:
             return subprog
-        return "" # performance hack, since [[][][[]]] and [] are equivalent
+        return '' # performance hack, since [[][][[]]] and [] are equivalent
 
     def InterpretBF(self, prog):
-        if '.' not in prog: return '' # shortcut!
-        self.tape = [0]
-        self.position = 0
-        if self.current_output is None:
+        if '.' not in prog:
+            self.current_output = '' # shortcut!
+        elif self.current_output is None:
+            self.tape = [0]
+            self.position = 0
             self.current_output = self.InterpretBFSub(prog)
         return self.current_output
 
@@ -117,10 +126,10 @@ class Brainfuck(Game):
             if opcode == '.':   output += chr(self.tape[self.position])
             elif opcode == '+':
                 self.tape[self.position] += 1
-                self.tape[self.position] &= 0xFF
+                self.tape[self.position] &= self.bit_mask
             elif opcode == '-':
                 self.tape[self.position] -= 1
-                self.tape[self.position] &= 0xFF
+                self.tape[self.position] &= self.bit_mask
             elif opcode == '>':
                 self.position += 1
                 if len(self.tape) <= self.position:
@@ -132,10 +141,13 @@ class Brainfuck(Game):
                     self.position -= 1
             elif opcode == '[':
                 loop_body = self.BracketedSubstring(prog[pc:])
+                if not loop_body: continue # shortcut!
                 iter_count = 0 # FIXME when halting problem is solved
-                while self.tape[self.position] and iter_count < 0x100:
+                while self.tape[self.position]:
                     output += self.InterpretBFSub(loop_body)
                     iter_count += 1
+                    if iter_count > self.iter_max:
+                        raise InfiniteLoopException(output)
                 pc += len(loop_body) + 1
         return output
 
