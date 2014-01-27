@@ -42,6 +42,9 @@ def _valid_mapfile(fname):
 defaultargs = { 'map': 'data/wikipedia.org_wiki_Sokoban.txt' }
 validargs = { 'map': _valid_mapfile }
 
+def manhattan_distance((x1, y1), (x2, y2)):
+    return abs(x1 - x2) + abs(y1 - y2)
+
 class Sokoban(Game):
     name = 'sokoban'
 
@@ -94,8 +97,32 @@ class Sokoban(Game):
             ret.set_at(box, box_color)
         return ret
 
+    def TrappedBox(self, (x, y)):
+        if (x, y) in self.holes:
+            return False
+        neighbors = [
+            [(not self.EmptySquare(x+i, y+j)) for j in (-1, 0, 1)]
+                for i in (-1, 0, 1)
+        ]
+        NW = neighbors[0][0]
+        N  = neighbors[1][0]
+        NE = neighbors[2][0]
+        E  = neighbors[2][1]
+        SE = neighbors[2][2]
+        S  = neighbors[1][2]
+        SW = neighbors[0][2]
+        W  = neighbors[0][1]
+        return (N and ((NW and W) or (NE and E))) \
+            or (S and ((SW and W) or (SE and E)))
+
     def Heuristic(self):
-        return len(self.holes - self.boxes)
+        if any(self.TrappedBox(box) for box in self.boxes):
+            return float('inf')
+        return sum(
+            min(
+                manhattan_distance(hole, box) for box in self.boxes
+            ) for hole in self.holes
+        )
 
     def EmptySquare(self, x, y):
         "True iff (x, y) is in-bounds and a valid position for a man or a box"
