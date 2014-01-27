@@ -89,6 +89,16 @@ class Sokoban(Game):
                     self.boxes.add(xy)
                     self.holes.add(xy)
                     self.surf.set_at(xy, hole_color)
+
+        # performance hack
+        for boxhole in self.boxes & self.holes:
+            if self.TrappedBox(boxhole):
+                self.boxes.remove(boxhole)
+                self.holes.remove(boxhole)
+                x, y = boxhole
+                self.world[x][y] = wall
+                self.surf.set_at(boxhole, boxhole_color)
+
         self.holes = frozenset(self.holes)
 
     def Draw(self):
@@ -102,8 +112,12 @@ class Sokoban(Game):
         return ret
 
     def TrappedBox(self, (x, y)):
-        if (x, y) in self.holes:
-            return False
+        # check walls (if blocked by one wall in each direction, can't move)
+        walled_x = (self.world[x-1][y] or self.world[x+1][y])
+        walled_y = (self.world[x][y-1] or self.world[x][y+1])
+        if walled_x and walled_y:
+            return True
+        # check walls AND other boxes together (four corners configuration)
         neighbors = [
             [(not self.EmptySquare(x+i, y+j)) for j in (-1, 0, 1)]
                 for i in (-1, 0, 1)
@@ -120,7 +134,7 @@ class Sokoban(Game):
             or (S and ((SW and W) or (SE and E)))
 
     def Heuristic(self):
-        if any(self.TrappedBox(box) for box in self.boxes):
+        if any(self.TrappedBox(box) for box in (self.boxes - self.holes)):
             return float('inf')
         return sum(
             min(
