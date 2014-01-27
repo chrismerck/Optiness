@@ -143,10 +143,9 @@ class Sokoban(Game):
     def Heuristic(self):
         if any(self.TrappedBox(box) for box in (self.boxes - self.holes)):
             return float('inf')
-        return sum(
-            min(
-                manhattan_distance(hole, box) for box in self.boxes
-            ) for hole in self.holes
+        return max(
+            sum(min(manhattan_distance(hole, box) for box in self.boxes) for hole in self.holes),
+            sum(min(manhattan_distance(box, hole) for hole in self.holes) for box in self.boxes)
         )
 
     def EmptySquare(self, x, y):
