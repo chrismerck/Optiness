@@ -26,18 +26,21 @@ boxhole_color = (150,100,0)
 floor = 0
 wall = 1
 
-# '#' denotes a wall
-# '@' denotes a man (max 1)
-# '`' denotes a box
-# '^' denotes a hole
-# '*' denotes a box already on a hole
-
+# roughly follows http://sokobano.de/wiki/index.php?title=Sok_format conventions
+# also, to please nethack players, ` can denote a box and ^ can denote a hole
 def _valid_mapfile(fname):
     if os.path.isfile(fname):
         x = open(fname, 'r').read()
-        return type(x) is str \
-            and x.count('@') == 1 and x.count('^') == x.count('`') \
-            and set(x).issubset(set('#@`^* \n'))
+        if x.count('@') + x.count('+') + x.count('p') + x.count('P') != 1:
+            print "exactly one 'pusher' character must exist"
+            return False
+        if x.count('$') + x.count('b') + x.count('`') != x.count('.') + x.count('^'):
+            print "number of boxes does not match number of holes"
+            return False
+        if not frozenset(x).issubset(frozenset('#@+pP$*bB`.^ -_\n')):
+            print "invalid characters in map file.  please remove headers etc."
+            return False
+        return True
     return False
 
 defaultargs = { 'map': 'data/wikipedia.org_wiki_Sokoban.txt' }
@@ -75,17 +78,21 @@ class Sokoban(Game):
             for x in xrange(len(lines[y])):
                 char = lines[y][x]
                 xy = (x, y)
-                if char == '#':
+                if char in '#':
                     self.world[x][y] = wall
                     self.surf.set_at(xy, wall_color)
-                elif char == '@':
+                elif char in 'p@':
                     self.xpos, self.ypos = xy
-                elif char == '`':
-                    self.boxes.add(xy)
-                elif char == '^':
+                elif char in 'P+':
+                    self.xpos, self.ypos = xy
                     self.holes.add(xy)
                     self.surf.set_at(xy, hole_color)
-                elif char == '*':
+                elif char in 'b$`':
+                    self.boxes.add(xy)
+                elif char in '.^':
+                    self.holes.add(xy)
+                    self.surf.set_at(xy, hole_color)
+                elif char in 'B*':
                     self.boxes.add(xy)
                     self.holes.add(xy)
                     self.surf.set_at(xy, hole_color)
