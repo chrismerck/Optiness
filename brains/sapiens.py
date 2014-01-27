@@ -58,10 +58,12 @@ class Sapiens(Brain):
 		keyhat = self.args['keyhat']
 		for i in xrange(len(keyhat)):
 			s = 'hat0_{}'.format(UDLR[i])
-			self.key_map[ord(keyhat[i])] = map[s]
+			if s in map:
+			    self.key_map[ord(keyhat[i])] = map[s]
 		keybuttons = self.args['keybuttons']
 		for i in xrange(len(keybuttons)):
-			self.key_map[ord(keybuttons[i])] = map[i]
+			if i in map:
+			    self.key_map[ord(keybuttons[i])] = map[i]
 
 	def Step(self):
 		self.clock.tick(self.fps)
