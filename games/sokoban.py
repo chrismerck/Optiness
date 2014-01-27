@@ -15,11 +15,12 @@ import os
 
 from skeleton_game import Game
 
-wall_color = (180,85,20)
-floor_color = (100,100,100)
-hole_color = (50,50,50)
-player_color = (200,200,200)
+wall_color = (100,50,50)
+floor_color = (150,150,150)
+hole_color = (100,100,100)
+player_color = (250,250,250)
 box_color = (200,150,0)
+boxhole_color = (150,100,0)
 
 # tile types:
 floor = 0
@@ -94,7 +95,10 @@ class Sokoban(Game):
         ret = self.surf.copy()
         ret.set_at((self.xpos, self.ypos), player_color)
         for box in self.boxes:
-            ret.set_at(box, box_color)
+            if box in self.holes:
+                ret.set_at(box, boxhole_color)
+            else:
+                ret.set_at(box, box_color)
         return ret
 
     def TrappedBox(self, (x, y)):
